@@ -59,8 +59,6 @@ internal static class Startup
                 .Enrich.FromLogContext()
         );
 
-        // Add Serilog to the logging builder
-        builder.Services.AddSerilog();
         // This allows using ILogger<T> injectables throughout the application
         builder.Services.AddLogging(lb => lb.AddSerilog(dispose: true));
         return builder;
@@ -106,13 +104,15 @@ internal static class Startup
             .UseHealthChecks("/health")
             .UseSerilogRequestLogging(configuration =>
             {
+                // Make request logging appear only when using 'Debug' log level for 'Microsoft' namespace prefix
                 configuration.GetLevel = (ctx, _, ex) =>
                     ex != null
                         ? LogEventLevel.Error
                         : ctx.Response.StatusCode > 499
                             ? LogEventLevel.Error
-                            : LogEventLevel.Information;
+                            : LogEventLevel.Debug;
             });
+
         return builder;
     }
 }

@@ -10,7 +10,7 @@ var app = WebApplication
     .Build();
 
 // Use infrastructure services
-//app.UseInfrastructure();
+app.UseInfrastructure();
 
 // Log startup
 var logger = app.Services.GetService<ILogger<Program>>()!;
