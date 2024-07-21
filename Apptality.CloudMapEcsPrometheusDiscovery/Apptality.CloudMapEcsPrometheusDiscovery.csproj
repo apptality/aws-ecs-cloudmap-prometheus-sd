@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <RootNamespace>Apptality.CloudMapEcsPrometheusDiscovery</RootNamespace>
+        <AssemblyName>CloudMapEcsPrometheusDiscovery</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AWSSDK.ECS" />
+      <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" />
+      <PackageReference Include="AWSSDK.ServiceDiscovery" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+      <PackageReference Include="Serilog" />
+      <PackageReference Include="Serilog.AspNetCore" />
+      <PackageReference Include="Serilog.Sinks.Console" />
+      <PackageReference Include="System.Text.Json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Discovery\Ecs\ServiceConnect\" />
+      <Folder Include="Discovery\Ecs\ServiceDiscovery\" />
+      <Folder Include="Discovery\Prometheus\" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apptality.CloudMapEcsPrometheusDiscovery", "Apptality.CloudMapEcsPrometheusDiscovery\Apptality.CloudMapEcsPrometheusDiscovery.csproj", "{9F756B3B-C8D0-49AB-9917-CE7654DD009A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F756B3B-C8D0-49AB-9917-CE7654DD009A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F756B3B-C8D0-49AB-9917-CE7654DD009A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F756B3B-C8D0-49AB-9917-CE7654DD009A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F756B3B-C8D0-49AB-9917-CE7654DD009A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
