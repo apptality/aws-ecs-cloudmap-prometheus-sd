@@ -1,6 +1,7 @@
 using Amazon.ECS;
 using Amazon.ServiceDiscovery;
-using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Ecs;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery;
@@ -11,26 +12,10 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery;
 public static class Startup
 {
     /// <summary>
-    /// Adds discovery configurations to the application
-    /// </summary>
-    private static WebApplicationBuilder AddConfiguration(this WebApplicationBuilder builder)
-    {
-        builder.Services
-            // Add discovery options to the configuration
-            .AddOptions<DiscoveryOptions>()
-            .BindConfiguration(nameof(DiscoveryOptions))
-            // Ensure configurations are validated on start
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        return builder;
-    }
-
-    /// <summary>
     /// Adds AWS services to the application
     /// </summary>
     /// <see cref="https://aws.amazon.com/blogs/developer/configuring-aws-sdk-with-net-core/"/>
-    private static WebApplicationBuilder AddAws(this WebApplicationBuilder builder)
+    private static WebApplicationBuilder AddAwsServices(this WebApplicationBuilder builder)
     {
         builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
         builder.Services.AddAWSService<IAmazonECS>();
@@ -39,13 +24,14 @@ public static class Startup
     }
 
     /// <summary>
-    /// Adds all infrastructure configurations to the application
+    /// Adds services and configurations that support the business logic of the application
     /// </summary>
     internal static WebApplicationBuilder AddDiscovery(this WebApplicationBuilder builder)
     {
         return builder
-            .AddConfiguration()
-            .AddAws()
-            .AddEcsDiscovery();
+            .AddOptions()
+            .AddAwsServices()
+            .AddEcsDiscovery()
+            .AddCloudMapDiscovery();
     }
 }

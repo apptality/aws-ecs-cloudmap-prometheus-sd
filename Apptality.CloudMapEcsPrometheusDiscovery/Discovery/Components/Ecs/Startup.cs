@@ -1,4 +1,4 @@
-namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Ecs;
+namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
 
 /// <summary>
 /// Startup class for adding ECS service discovery components
@@ -6,10 +6,11 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Ecs;
 public static class Startup
 {
     /// <summary>
-    /// Adds all infrastructure configurations to the application
+    /// Adds ECS service discovery components to the application
     /// </summary>
     internal static WebApplicationBuilder AddEcsDiscovery(this WebApplicationBuilder builder)
     {
+        builder.Services.AddSingleton<IEcsDiscovery, EcsDiscovery>();
         return builder;
     }
 }

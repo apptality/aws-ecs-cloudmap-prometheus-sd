@@ -19,9 +19,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Discovery\Ecs\ServiceConnect\" />
-      <Folder Include="Discovery\Ecs\ServiceDiscovery\" />
-      <Folder Include="Discovery\Prometheus\" />
+      <Folder Include="Discovery\Components\" />
+      <Folder Include="Discovery\Services\" />
     </ItemGroup>
 
 </Project>

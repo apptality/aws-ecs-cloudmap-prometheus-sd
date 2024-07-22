@@ -6,8 +6,11 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "applicationUrl": "http://localhost:9001",
-      "launchUrl": "prometheus-targets",
+      "launchUrl": "prometheus-ecs-targets",
       "environmentVariables": {
+        "AWS_ACCESS_KEY_ID": "",
+        "AWS_SECRET_ACCESS_KEY": "",
+        "AWS_SESSION_TOKEN": "",
         "AWS_REGION": "us-west-2"
       }
     }

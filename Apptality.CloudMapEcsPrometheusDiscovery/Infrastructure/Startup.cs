@@ -52,6 +52,15 @@ internal static class Startup
     /// </summary>
     private static WebApplicationBuilder AddLogging(this WebApplicationBuilder builder)
     {
+        // Configure static logger to log to console
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .CreateLogger();
+
         // Serilog is used for logging in the application
         builder.Host.UseSerilog((ctx, config) =>
             config
@@ -61,6 +70,7 @@ internal static class Startup
 
         // This allows using ILogger<T> injectables throughout the application
         builder.Services.AddLogging(lb => lb.AddSerilog(dispose: true));
+
         return builder;
     }
 
@@ -102,16 +112,7 @@ internal static class Startup
     {
         builder
             .UseHealthChecks("/health")
-            .UseSerilogRequestLogging(configuration =>
-            {
-                // Make request logging appear only when using 'Debug' log level for 'Microsoft' namespace prefix
-                configuration.GetLevel = (ctx, _, ex) =>
-                    ex != null
-                        ? LogEventLevel.Error
-                        : ctx.Response.StatusCode > 499
-                            ? LogEventLevel.Error
-                            : LogEventLevel.Debug;
-            });
+            .UseSerilogRequestLogging();
 
         return builder;
     }
