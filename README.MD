@@ -1,4 +1,3 @@
-```markdown
 # AWS CloudMap Ecs Prometheus Discovery
 
 **THIS APPLICATION IS STILL UNDER CONSTRUCTION**
@@ -30,4 +29,3 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
-```

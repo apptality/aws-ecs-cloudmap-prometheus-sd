@@ -43,6 +43,7 @@ public static class AwsExtensions
     /// Executes an asynchronous operation with retry logic for AWS throttling exceptions.
     /// </summary>
     /// <typeparam name="TResponse">The type of the response returned by the operation.</typeparam>
+    /// <param name="_">Parameter that is not used, but make code look nicer</param>
     /// <param name="operation">The asynchronous operation to execute.</param>
     /// <param name="maxRetries">The maximum number of retry attempts. Default is 3.</param>
     /// <param name="retryDelayMilliseconds">The base delay between retries in milliseconds. Default is 500ms.</param>
