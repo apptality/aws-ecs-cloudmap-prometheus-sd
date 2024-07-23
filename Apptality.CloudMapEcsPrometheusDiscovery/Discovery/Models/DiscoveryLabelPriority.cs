@@ -1,7 +1,7 @@
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 
 /// <summary>
-/// This enum is used to associate labels with precedence priority
+/// Enum is used to associate labels with precedence priority
 /// </summary>
 public enum DiscoveryLabelPriority
 {
@@ -9,15 +9,17 @@ public enum DiscoveryLabelPriority
     /// Labels inferred from tags resolved from the AWS CloudMap Service are of the highest priority,
     /// and will take precedence over other tags resolved from parent services/"container" resources.
     /// </summary>
-    CloudMapService = 0,
+    CloudMapService = 10,
 
-    CloudMapNamespace = 10,
+    CloudMapNamespace = 20,
 
-    EcsTask = 20,
+    EcsTask = 30,
+
+    EcsService = 40,
 
     /// <summary>
-    /// Labels inferred from tags resolved from ECS services are of the lowest priority, and will
+    /// Labels supplied via `ExtraPrometheusLabels` parameter are of the lowest priority, and will
     /// take the lowest precedence.
     /// </summary>
-    EcsService = 30,
+    ExtraLabels = 50,
 }

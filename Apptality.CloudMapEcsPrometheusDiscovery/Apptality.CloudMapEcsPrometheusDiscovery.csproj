@@ -20,7 +20,6 @@
 
     <ItemGroup>
       <Folder Include="Discovery\Components\" />
-      <Folder Include="Discovery\Services\" />
     </ItemGroup>
 
 </Project>
