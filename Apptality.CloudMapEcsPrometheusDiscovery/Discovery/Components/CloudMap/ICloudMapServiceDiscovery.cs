@@ -3,15 +3,15 @@ using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Mod
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
 
-public interface IServiceDiscovery
+public interface ICloudMapServiceDiscovery
 {
     /// <summary>
-    /// Resolves the namespaces provided via configuration options
+    /// Resolves the namespaces
     /// </summary>
     /// <returns>
     /// List of namespaces, or null if no namespaces are found
     /// </returns>
-    Task<List<NamespaceSummary>> GetNamespaces();
+    Task<List<NamespaceSummary>> GetNamespaces(ICollection<string> namespaceNames);
 
     /// <summary>
     /// Lists all services in a given namespace
@@ -20,7 +20,7 @@ public interface IServiceDiscovery
     /// <returns>
     /// List of services, or null if no namespaces are found
     /// </returns>
-    Task<List<ServiceSummary>> GetServices(string[] namespaceIds);
+    Task<List<ServiceSummary>> GetServices(string namespaceIds);
 
     /// <summary>
     /// Lists all instances of a given service

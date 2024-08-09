@@ -12,7 +12,7 @@ public interface IEcsDiscovery
     /// <returns>
     /// List of ECS clusters information
     /// </returns>
-    Task<List<Cluster>> GetClusters();
+    Task<List<Cluster>> GetClusters(ICollection<string> clusterNames);
 
     /// <summary>
     /// Resolves the ECS services information for a given cluster
@@ -36,7 +36,7 @@ public interface IEcsDiscovery
     /// <returns>
     /// List of services descriptions for the given service ARNs
     /// </returns>
-    Task<List<Service>> DescribeServices(string[] serviceArns);
+    Task<List<Service>> DescribeServices(ICollection<string> serviceArns);
 
     /// <summary>
     /// Returns information about running ECS tasks for the given cluster and service

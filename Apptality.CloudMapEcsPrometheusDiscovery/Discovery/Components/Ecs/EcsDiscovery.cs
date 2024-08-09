@@ -2,9 +2,7 @@ using Amazon.ECS;
 using Amazon.ECS.Model;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs.Extensions;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs.Models;
-using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 using Apptality.CloudMapEcsPrometheusDiscovery.Extensions;
-using Microsoft.Extensions.Options;
 using EcsTask = Amazon.ECS.Model.Task;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
@@ -14,7 +12,6 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
 /// </summary>
 public class EcsDiscovery(
     ILogger<EcsDiscovery> logger,
-    IOptions<DiscoveryOptions> discoveryOptions,
     IAmazonECS ecsClient
 ) : IEcsDiscovery
 {
@@ -22,18 +19,17 @@ public class EcsDiscovery(
     /// <remarks>
     /// Read more about the DescribeClusters API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ECS/TDescribeClustersRequest.html">here</a>
     /// </remarks>
-    public async Task<List<Cluster>> GetClusters()
+    public async Task<List<Cluster>> GetClusters(ICollection<string> clusterNames)
     {
-        var ecsClusters = discoveryOptions.Value.EcsClusters
-            .Split(';')
-            .Where(c => !string.IsNullOrWhiteSpace(c))
-            .ToList();
+        if (clusterNames.Count == 0) return [];
 
-        if (ecsClusters.Count == 0) return [];
+        logger.LogDebug("Fetching ECS clusters: {@EcsClusters}", clusterNames);
 
-        logger.LogDebug("Fetching ECS clusters: {@EcsClusters}", ecsClusters);
-
-        var request = new DescribeClustersRequest {Clusters = ecsClusters};
+        var request = new DescribeClustersRequest
+        {
+            Clusters = clusterNames.ToList(),
+            Include = ["TAGS"]
+        };
 
         var response = await ecsClient.DescribeClustersAsync(request);
 
@@ -64,9 +60,26 @@ public class EcsDiscovery(
         //     },
         //     "settings": [],
         //     "statistics": [],
-        //     "status": "ACTIVE",
-        //     "tags": []
-        // }
+        //     "status": "ACTIVE"
+        //      "tags": [
+        //          {
+        //              "key": "environment",
+        //              "value": "dev"
+        //          },
+        //          {
+        //              "key": "terraform",
+        //              "value": "true"
+        //          },
+        //          {
+        //              "key": "component",
+        //              "value": "app"
+        //          },
+        //          {
+        //              "key": "repository",
+        //              "value": "app-terraform"
+        //          }
+        //      ]
+        //    }
         // ]
     }
 
@@ -152,7 +165,7 @@ public class EcsDiscovery(
     /// <remarks>
     /// Read more about the DescribeServices API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ECS/TDescribeServicesRequest.html">here</a>
     /// </remarks>
-    public async Task<List<Service>> DescribeServices(string[] serviceArns)
+    public async Task<List<Service>> DescribeServices(ICollection<string> serviceArns)
     {
         // First, group service ARNs by ECS cluster name
         var serviceArnsByCluster = serviceArns
@@ -409,7 +422,8 @@ public class EcsDiscovery(
             DesiredStatus = DesiredStatus.RUNNING
         };
 
-        logger.LogDebug("Fetching running tasks for ECS service {ServiceArn} in cluster {ClusterArn}", serviceArn, clusterArn);
+        logger.LogDebug("Fetching running tasks for ECS service {ServiceArn} in cluster {ClusterArn}", serviceArn,
+            clusterArn);
 
         var responses = await ecsClient.FetchAllPagesAsync(
             request,
@@ -420,7 +434,8 @@ public class EcsDiscovery(
 
         var runningTaskArns = responses.SelectMany(response => response.TaskArns).ToArray();
 
-        logger.LogDebug("In ECS cluster {ClusterArn}, found {RunningTaskCount} running tasks for service {ServiceArn}: {@RunningTaskArns}",
+        logger.LogDebug(
+            "In ECS cluster {ClusterArn}, found {RunningTaskCount} running tasks for service {ServiceArn}: {@RunningTaskArns}",
             clusterArn, runningTaskArns.Length, serviceArn, runningTaskArns);
 
         return new EcsRunningTask(clusterArn, serviceArn, runningTaskArns);
@@ -458,7 +473,7 @@ public class EcsDiscovery(
         // Fetch tasks in batches
         foreach (var taskArnsBatch in taskArnsBatches)
         {
-            var request = new DescribeTasksRequest {Cluster = clusterArn, Tasks = taskArnsBatch};
+            var request = new DescribeTasksRequest {Cluster = clusterArn, Tasks = taskArnsBatch, Include = ["TAGS"]};
 
             var response = await ecsClient.DescribeTasksAsync(request);
             tasks.AddRange(response.Tasks);
@@ -727,7 +742,7 @@ public class EcsDiscovery(
     /// </remarks>
     public async Task<TaskDefinition> DescribeTaskDefinition(string taskDefinitionArn)
     {
-        if(string.IsNullOrWhiteSpace(taskDefinitionArn))
+        if (string.IsNullOrWhiteSpace(taskDefinitionArn))
             throw new ArgumentException("Task definition ARN must be provided.", nameof(taskDefinitionArn));
 
         var request = new DescribeTaskDefinitionRequest
@@ -736,7 +751,8 @@ public class EcsDiscovery(
             TaskDefinition = taskDefinitionArn
         };
 
-        var response = await ecsClient.ExecuteWithRetryAsync(async () => await ecsClient.DescribeTaskDefinitionAsync(request));
+        var response =
+            await ecsClient.ExecuteWithRetryAsync(async () => await ecsClient.DescribeTaskDefinitionAsync(request));
 
         return response.TaskDefinition;
     }

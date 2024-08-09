@@ -2,7 +2,9 @@ using Amazon.ECS;
 using Amazon.ServiceDiscovery;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery;
 
@@ -24,6 +26,18 @@ public static class Startup
     }
 
     /// <summary>
+    /// Adds Discovery BLL services to the application
+    /// </summary>
+    private static WebApplicationBuilder AddDiscoveryServices(this WebApplicationBuilder builder)
+    {
+        // Registers discovery context as a scoped injectable,
+        // so that multiple services can share the same state.
+        builder.Services.AddScoped<DiscoveryResult>();
+        builder.Services.AddScoped<DiscoveryService>();
+        return builder;
+    }
+
+    /// <summary>
     /// Adds services and configurations that support the business logic of the application
     /// </summary>
     internal static WebApplicationBuilder AddDiscovery(this WebApplicationBuilder builder)
@@ -32,6 +46,7 @@ public static class Startup
             .AddOptions()
             .AddAwsServices()
             .AddEcsDiscovery()
-            .AddCloudMapDiscovery();
+            .AddCloudMapDiscovery()
+            .AddDiscoveryServices();
     }
 }

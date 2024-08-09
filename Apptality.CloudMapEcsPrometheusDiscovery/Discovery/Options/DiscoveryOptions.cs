@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Apptality.CloudMapEcsPrometheusDiscovery.Extensions;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 
@@ -11,49 +10,57 @@ public class DiscoveryOptions : IValidatableObject
     /// <summary>
     /// Semicolon separated string containing ECS clusters names to query for services.
     /// </summary>
-    [Required]
+    /// <remarks>
+    /// At least one of "EcsClusters" or "CloudMapNamespaces" must be provided.
+    /// </remarks>
     public string EcsClusters { get; init; } = string.Empty;
 
     /// <summary>
-    /// Semicolon separated string containing regexes to match services names when ECS cluster is observed.
-    /// Only those services that match any of the regular expressions supplied will be included.
-    /// Default is ".*" (match all services).
+    /// Semicolon separated string of tag key-value pairs to select ECS services.
+    /// If selector is not provided, all services in the cluster are included.
+    /// Example: "service_discovery=true;component=app"
     /// </summary>
-    public string EcsServiceMatcherRegexes { get; init; } = ".*;";
+    public string EcsServiceSelectorTags { get; init; } = string.Empty;
 
     /// <summary>
     /// Semicolon separated string containing Cloud Map namespaces names to query for services.
+    /// All ECS services that are using Service Connect are always included in lookup.
+    /// This parameter allows you to include additional namespaces to discover
+    /// services using AWS Service Discovery (legacy).
     /// </summary>
     /// <remarks>
-    /// At least one of 'CloudMapNamespaces' or 'EcsClusters' must be configured.
+    /// At least one of "EcsClusters" or "CloudMapNamespaces" must be provided.
     /// </remarks>
     public string CloudMapNamespaces { get; init; } = string.Empty;
 
     /// <summary>
-    /// Semicolon separated string containing regexes to match services registered using Service Connect.
-    /// Only those services that match any of the regular expressions supplied will be included.
-    /// Default is ".*" (match all services).
+    /// Semicolon separated string of tag key-value pairs to select CloudMap services.
+    /// If selector is not provided, all services in the CloudMap namespace are included.
+    /// Example: "service_discovery=true;component=app"
+    /// Default is empty string (match all services).
     /// </summary>
     /// <remarks>
     /// Read more at <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html">service-connect</a> docs.
     /// Read more at <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html">service-discovery</a> docs.
     /// </remarks>
-    public string CloudMapServiceMatcherRegexes { get; init; } = ".*;";
+    public string CloudMapServiceSelectorTags { get; init; } = string.Empty;
 
     // Tags are resolved with the following priority:
-    // * Cloud Map Service
-    // * Cloud Map Namespace
-    // * ECS Task
-    // * ECS Service
+    // 1) ECS Task
+    // 2) ECS Service
+    // 3) Cloud Map Service
+    // 4) Cloud Map Namespace
+    // For example, if both Cloud Map Namespace and ECS Task have a tag
+    // with the same key, the value from the ECS Task will be used.
 
     /// <summary>
-    /// When non-empty, tags that match regex from ECS services
+    /// When non-empty, tags that match from ECS services
     /// are included in the service discovery results as labels.
     /// </summary>
-    public string EcsServiceTagsRegex { get; set; } = string.Empty;
+    public string EcsServiceTags { get; set; } = string.Empty;
 
     /// <summary>
-    /// When non-empty, tags that match regex from ECS tasks
+    /// When non-empty, tags that match from ECS tasks
     /// are included in the service discovery results as labels.
     /// </summary>
     /// <remarks>
@@ -62,19 +69,19 @@ public class DiscoveryOptions : IValidatableObject
     /// consider modifying ECS service to propagate tags from task definitions to running tasks.
     /// You can read more <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-using-tags.html#tag-resources">here</a>
     /// </remarks>
-    public string EcsTaskTagsRegex { get; set; } = string.Empty;
+    public string EcsTaskTags { get; set; } = string.Empty;
 
     /// <summary>
-    /// When non-empty, tags that match regex from Cloud Map namespaces
+    /// When non-empty, tags that match from Cloud Map namespaces
     /// are included in the service discovery results as labels.
     /// </summary>
-    public string CloudMapNamespaceTagsRegex { get; set; } = string.Empty;
+    public string CloudMapNamespaceTags { get; set; } = string.Empty;
 
     /// <summary>
-    /// When non-empty, tags that match regex from Cloud Map services
+    /// When non-empty, tags that match from Cloud Map services
     /// are included in the service discovery results as labels.
     /// </summary>
-    public string CloudMapServiceTagsRegex { get; set; } = string.Empty;
+    public string CloudMapServiceTags { get; set; } = string.Empty;
 
     /// <summary>
     /// Semicolon separated string of static labels to include in the
@@ -96,7 +103,49 @@ public class DiscoveryOptions : IValidatableObject
     /// </para>
     /// </remarks>
     [Range(0, 65535)]
-    public ushort CacheTtlSeconds { get; set; } = 5;
+    public ushort CacheTtlSeconds { get; set; } = 60;
+
+    /// <summary>
+    /// Tag prefix to identify metrics path and port.
+    /// Must be at least three characters long and end with an underscore.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This prefix has a special meaning and is used to identify the metrics path and port
+    /// for the service. 'PATH' and 'PORT' will be appended to the prefix to identify the
+    /// metrics path and port respectively.
+    /// </para>
+    /// <para>
+    /// If your service contains multiple metrics paths
+    /// or ports, you can tag your resources using the following format:
+    /// <ul>
+    /// <li>SD_METRICS_PATH_1 = /metrics</li>
+    /// <li>SD_METRICS_PORT_1 = 9001</li>
+    /// <li>SD_METRICS_PATH_2 = /metrics2</li>
+    /// <li>SD_METRICS_PORT_2 = 9002</li>
+    /// </ul>
+    /// ..etc.
+    /// </para>
+    /// <para>
+    /// System won't care for anything after _PATH or _PORT,
+    /// so as long as these postfixes come in pairs,
+    /// you can use any postfix (including empty) you prefer,
+    /// which makes the following combination also equally valid:
+    /// <ul>
+    /// <li>SD_METRICS_PATH = /metrics</li>
+    /// <li>SD_METRICS_PORT = 9001</li>
+    /// </ul>
+    /// <ul>
+    /// <li>SD_METRICS_PATH_SVC-ONE = /metrics</li>
+    /// <li>SD_METRICS_PORT_SVC-ONE = 9001</li>
+    /// </ul>
+    /// </para>
+    /// <para>
+    /// Here is a regex to match the tags: ^SD_METRICS_(PATH|PORT)\w+$
+    /// </para>
+    /// </remarks>
+    [MinLength(3)]
+    public string MetricsPathPortTagPrefix { get; set; } = "SD_METRICS_";
 
     /// <summary>
     /// Validates the discovery options
@@ -107,38 +156,24 @@ public class DiscoveryOptions : IValidatableObject
         var validationResults = new List<ValidationResult>();
 
         // Ensure at least one Cloud Map namespace or ECS cluster is provided
-        var ecsClusters = EcsClusters.Split(';').Where(ecs => !string.IsNullOrWhiteSpace(ecs)).ToList();
+        var ecsClusters = this.GetEcsClustersNames();
+        var cloudMapNamespaces = this.GetCloudMapNamespaceNames();
 
-        if (ecsClusters.Count == 0)
+        // If both are empty, add a validation error
+        if (ecsClusters.Length == 0 && cloudMapNamespaces.Length == 0)
         {
             validationResults.Add(new ValidationResult(
-                "At least one ECS Cluster name must be specified.",
-                new[] {nameof(EcsClusters)}));
+                "At least one of 'EcsClusters' or 'CloudMapNamespaces' name must be specified.",
+                new[] {nameof(EcsClusters), nameof(CloudMapNamespaces)}));
         }
 
-        // Get non-empty regexes for ECS service discovery
-        var ecsServiceDiscoveryResults = EcsServiceMatcherRegexes.Split(';')
-            .Where(regex => !string.IsNullOrWhiteSpace(regex)).ToList();
-
-        var ecsServiceDiscoveryValidationResults = from regex in ecsServiceDiscoveryResults
-            where !regex.IsValidRegex()
-            select new ValidationResult(
-                $"{nameof(EcsServiceMatcherRegexes)} contains an invalid regex: {regex}",
-                new[] {nameof(EcsServiceMatcherRegexes)});
-
-        // Get non-empty regexes for CloudMap service discovery
-        var cloudMapServiceDiscoveryResults = CloudMapServiceMatcherRegexes.Split(';')
-            .Where(regex => !string.IsNullOrWhiteSpace(regex)).ToList();
-
-        var cloudMapServiceDiscoveryValidationResults = from regex in cloudMapServiceDiscoveryResults
-            where !regex.IsValidRegex()
-            select new ValidationResult(
-                $"{nameof(CloudMapServiceMatcherRegexes)} contains an invalid regex: {regex}",
-                new[] {nameof(CloudMapServiceMatcherRegexes)});
-
-        // Aggregate validation results
-        validationResults.AddRange(cloudMapServiceDiscoveryValidationResults);
-        validationResults.AddRange(ecsServiceDiscoveryValidationResults);
+        // Ensure that MetricsPathPortTagPrefix ends with an underscore
+        if (!MetricsPathPortTagPrefix.EndsWith("_"))
+        {
+            validationResults.Add(new ValidationResult(
+                "MetricsPathPortTagPrefix must end with an underscore.",
+                new[] {nameof(MetricsPathPortTagPrefix)}));
+        }
 
         return validationResults;
     }

@@ -1,4 +1,4 @@
-using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Contexts;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Processors;
 
@@ -12,6 +12,6 @@ public interface IDiscoveryProcessor
     /// <summary>
     /// Takes in a shared state and applies
     /// </summary>
-    /// <param name="context">Object representing shared state changes are being made upon</param>
-   public Task Process(DiscoveryContext context);
+    /// <param name="result">Object representing shared state changes are being made upon</param>
+   public Task Process(DiscoveryResult result);
 }

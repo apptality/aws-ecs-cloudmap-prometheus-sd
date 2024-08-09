@@ -20,6 +20,7 @@
 
     <ItemGroup>
       <Folder Include="Discovery\Components\" />
+      <Folder Include="Discovery\Contexts\" />
     </ItemGroup>
 
 </Project>

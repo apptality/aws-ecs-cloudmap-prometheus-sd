@@ -9,21 +9,20 @@ using Microsoft.Extensions.Options;
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
 
 /// <summary>
-/// Concrete implementation of <see cref="IServiceDiscovery"/> interface
+/// Concrete implementation of <see cref="ICloudMapServiceDiscovery"/> interface
 /// </summary>
-public class ServiceDiscovery(
-    ILogger<ServiceDiscovery> logger,
-    IOptions<DiscoveryOptions> discoveryOptions,
+public class CloudMapServiceDiscovery(
+    ILogger<CloudMapServiceDiscovery> logger,
     IAmazonServiceDiscovery serviceDiscoveryClient
-) : IServiceDiscovery
+) : ICloudMapServiceDiscovery
 {
-    /// <inheritdoc cref="IServiceDiscovery.GetNamespaces"/>
+    /// <inheritdoc cref="ICloudMapServiceDiscovery.GetNamespaces"/>
     /// <remarks>
     /// Read more about the ListNamespaces API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListNamespacesRequest.html">here</a>
     /// </remarks>
-    public async Task<List<NamespaceSummary>> GetNamespaces()
+    public async Task<List<NamespaceSummary>> GetNamespaces(ICollection<string> namespaceNames)
     {
-        var namespaceFilters = NamespaceFilterFactory.Create(discoveryOptions.Value.CloudMapNamespaces);
+        var namespaceFilters = NamespaceFilterFactory.Create(namespaceNames);
         var request = new ListNamespacesRequest {Filters = namespaceFilters};
         logger.LogDebug("Fetching data for the following namespaces: {@Namespaces}", request.Filters);
 
@@ -72,13 +71,13 @@ public class ServiceDiscovery(
         // ]
     }
 
-    /// <inheritdoc cref="IServiceDiscovery.GetServices"/>
+    /// <inheritdoc cref="ICloudMapServiceDiscovery.GetServices"/>
     /// <remarks>
     /// Read more about the ListServices API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListServicesRequest.html">here</a>
     /// </remarks>
-    public async Task<List<ServiceSummary>> GetServices(string[] namespaceIds)
+    public async Task<List<ServiceSummary>> GetServices(string namespaceId)
     {
-        var serviceFilters = ServiceFilterFactory.Create(namespaceIds);
+        var serviceFilters = ServiceFilterFactory.Create(namespaceId);
         var request = new ListServicesRequest {Filters = serviceFilters};
 
         // If no filters are provided, return null
@@ -145,7 +144,7 @@ public class ServiceDiscovery(
         //   ]
     }
 
-    /// <inheritdoc cref="IServiceDiscovery.GetServiceInstances"/>
+    /// <inheritdoc cref="ICloudMapServiceDiscovery.GetServiceInstances"/>
     /// <remarks>
     /// Read more about the ListInstances API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListInstancesRequest.html">here</a>
     /// </remarks>
@@ -222,7 +221,7 @@ public class ServiceDiscovery(
         // ]
     }
 
-    /// <see cref="IServiceDiscovery.GetInstance"/>
+    /// <see cref="ICloudMapServiceDiscovery.GetInstance"/>
     /// <remarks>
     /// For more information about the GetInstance API operation, see <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TGetInstanceRequest.html">here</a>
     /// </remarks>
@@ -280,7 +279,7 @@ public class ServiceDiscovery(
         // }
     }
 
-    /// <inheritdoc cref="IServiceDiscovery.GetTags"/>
+    /// <inheritdoc cref="ICloudMapServiceDiscovery.GetTags"/>
     /// <remarks>
     /// Read more about the ListTagsForResource API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListTagsForResourceRequest.html">here</a>
     /// </remarks>

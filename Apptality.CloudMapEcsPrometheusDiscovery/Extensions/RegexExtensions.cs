@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Extensions;
 
 /// <summary>
@@ -20,5 +22,17 @@ internal static class RegexExtensions
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Returns an array of regexes from a semicolon separated string
+    /// </summary>
+    internal static Regex[] GetRegexesFromSemicolonSeparatedString(this string semicolonSeparatedString)
+    {
+        return semicolonSeparatedString.Split(';')
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .Where(IsValidRegex)
+            .Select(c => new Regex(c))
+            .ToArray();
     }
 }

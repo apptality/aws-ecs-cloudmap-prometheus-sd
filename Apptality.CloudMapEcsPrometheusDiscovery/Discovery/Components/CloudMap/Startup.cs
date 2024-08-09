@@ -7,7 +7,7 @@ public static class Startup
     /// </summary>
     internal static WebApplicationBuilder AddCloudMapDiscovery(this WebApplicationBuilder builder)
     {
-        builder.Services.AddSingleton<IServiceDiscovery, ServiceDiscovery>();
+        builder.Services.AddSingleton<ICloudMapServiceDiscovery, CloudMapServiceDiscovery>();
         return builder;
     }
 }

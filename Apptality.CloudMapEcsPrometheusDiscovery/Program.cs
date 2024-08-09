@@ -2,9 +2,12 @@ using Amazon.ServiceDiscovery.Model;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
 using Apptality.CloudMapEcsPrometheusDiscovery.Infrastructure;
 using Apptality.CloudMapEcsPrometheusDiscovery.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Responses;
+using Microsoft.Extensions.Options;
 
 var app = WebApplication
     .CreateBuilder(args)
@@ -21,18 +24,30 @@ app.UseInfrastructure();
 var logger = app.Services.GetService<ILogger<Program>>()!;
 logger.LogInformation("Started 'ECS Prometheus Discovery' application");
 
-app.MapGet("/prometheus-ecs-targets", async (IEcsDiscovery ecsDiscovery) =>
+app.MapGet("/prometheus-targets", async (DiscoveryService discoveryService) =>
 {
-    var ecsClusters = await ecsDiscovery.GetClusters();
-    //return Results.Ok(ecsClusters);
+    var discoveryContext = await discoveryService.Discover();
+});
+
+app.MapGet("/prometheus-ecs-targets", async (
+    IOptions<DiscoveryOptions> discoveryOptions,
+    IEcsDiscovery ecsDiscovery
+) =>
+{
+    var ecsClusters = await ecsDiscovery.GetClusters(discoveryOptions.Value.GetEcsClustersNames());
+    return Results.Ok(ecsClusters);
 
     var firstCluster = ecsClusters.FirstOrDefault();
-    if (firstCluster==null) { return Results.NoContent(); }
+    if (firstCluster == null)
+    {
+        return Results.NoContent();
+    }
 
     var ecsClusterServices = await ecsDiscovery.GetClusterServices(firstCluster.ClusterArn);
     //return Results.Ok(ecsClusterServices);
 
-    var ecsCloudMapServices = await ecsDiscovery.GetCloudMapServices(firstCluster.ServiceConnectDefaults?.Namespace ?? "");
+    var ecsCloudMapServices =
+        await ecsDiscovery.GetCloudMapServices(firstCluster.ServiceConnectDefaults?.Namespace ?? "");
     //return Results.Ok(ecsCloudMapServices);
 
     var ecsServicesDescriptions = await ecsDiscovery.DescribeServices(ecsCloudMapServices.ServiceArns);
@@ -42,12 +57,16 @@ app.MapGet("/prometheus-ecs-targets", async (IEcsDiscovery ecsDiscovery) =>
     //return Results.Ok(taskDefinitions);
 
     var firstServiceArn = ecsCloudMapServices.ServiceArns.FirstOrDefault();
-    if (firstServiceArn == null) { return Results.NoContent(); }
+    if (firstServiceArn == null)
+    {
+        return Results.NoContent();
+    }
 
     var runningTasks = await ecsDiscovery.GetRunningTasks(firstCluster.ClusterArn, firstServiceArn);
     //return Results.Ok(runningTasks);
 
-    var runningTasksDescriptions = await ecsDiscovery.DescribeTasks(firstCluster.ClusterArn, runningTasks.RunningTaskArns);
+    var runningTasksDescriptions =
+        await ecsDiscovery.DescribeTasks(firstCluster.ClusterArn, runningTasks.RunningTaskArns);
     // return Results.Ok(runningTasksDescriptions);
 
     var runningTasksDefinition = await ecsDiscovery.DescribeTaskDefinition(taskDefinitions.First());
@@ -55,23 +74,30 @@ app.MapGet("/prometheus-ecs-targets", async (IEcsDiscovery ecsDiscovery) =>
 });
 
 // Map endpoint
-app.MapGet("/prometheus-cm-targets", async (ILogger<Program> l, IServiceDiscovery cmDiscoveryService) =>
+app.MapGet("/prometheus-cm-targets", async (
+    IOptions<DiscoveryOptions> discoveryOptions,
+    ILogger<Program> l,
+    ICloudMapServiceDiscovery cmDiscoveryService
+) =>
 {
     try
     {
         // List all namespaces
-        var cmNamespaces = await cmDiscoveryService.GetNamespaces();
+        var cmNamespaces = await cmDiscoveryService.GetNamespaces(discoveryOptions.Value.GetCloudMapNamespaceNames());
         var firstNamespaceTags = await cmDiscoveryService.GetTags(cmNamespaces.First().Arn);
         //return Results.Ok(firstNamespaceTags);
 
         // List all service within namespaces
         var cnNamespacesIds = cmNamespaces.Select(ns => ns.Id).ToList();
-        var cmServices = await cmDiscoveryService.GetServices(cnNamespacesIds.ToArray());
+        var cmServices = await cmDiscoveryService.GetServices(cnNamespacesIds.First());
 
-        var firstService = cmServices?.FirstOrDefault(s=>s.Name == "service-http"); //metrics-sd-
+        var firstService = cmServices?.FirstOrDefault(s => s.Name == "service-http"); //metrics-sd-
         var firstServiceTags = await cmDiscoveryService.GetTags(firstService.Arn);
         //return Results.Ok(firstServiceTags);
-        if (firstService == null) { return Results.NoContent(); }
+        if (firstService == null)
+        {
+            return Results.NoContent();
+        }
 
         var serviceInstances = await cmDiscoveryService.GetServiceInstances(firstService.Id);
         // return Results.Ok(serviceInstances);
@@ -81,7 +107,7 @@ app.MapGet("/prometheus-cm-targets", async (ILogger<Program> l, IServiceDiscover
         var instanceId = firstServiceInstance.Id;
         var instance = await cmDiscoveryService.GetInstance(serviceId, instanceId);
 
-        //return Results.Ok(instance);
+        return Results.Ok(instance);
 
         var templateResponse = new PrometheusTargetsResponse
         {
