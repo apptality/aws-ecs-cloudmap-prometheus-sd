@@ -220,8 +220,8 @@ public class DiscoveryService : IDiscoveryService
 
         if (cloudMapNamespacesNames.Length <= 0) return [];
 
-        var cloudMapNamespacesSummaries = await _cloudMapServiceDiscovery.GetNamespaces(cloudMapNamespacesNames);
-        if (cloudMapNamespacesSummaries.Count == 0)
+        var cloudMapNamespaces = await _cloudMapServiceDiscovery.GetNamespaces(cloudMapNamespacesNames);
+        if (cloudMapNamespaces.Count == 0)
         {
             _logger.LogDebug("No CloudMap namespaces found for the provided names: {@CloudMapNamespaces}",
                 _discoveryOptions.CloudMapNamespaces);
@@ -229,23 +229,14 @@ public class DiscoveryService : IDiscoveryService
 
         // For each CloudMap namespace, get its tags
         var cloudMapNamespacesTags = await Task.WhenAll(
-            cloudMapNamespacesSummaries.Select(ns => _cloudMapServiceDiscovery.GetTags(ns.Arn))
+            cloudMapNamespaces.Select(ns => _cloudMapServiceDiscovery.GetTags(ns.Arn))
         );
 
-        // Build a list of CloudMap namespaces with Tags
-        var cloudMapNamespaces = new List<CloudMapNamespace>();
-
-        foreach (var namespacesSummary in cloudMapNamespacesSummaries)
+        foreach (var cloudMapNamespace in cloudMapNamespaces)
         {
-            var sdns = new CloudMapNamespace
-            {
-                NamespaceSummary = namespacesSummary
-            };
-            cloudMapNamespaces.Add(sdns);
-
-            var namespaceTags = cloudMapNamespacesTags.FirstOrDefault(t => t.ResourceArn == namespacesSummary.Arn);
+            var namespaceTags = cloudMapNamespacesTags.FirstOrDefault(t => t.ResourceArn == cloudMapNamespace.Arn);
             if (namespaceTags == null) continue;
-            sdns.Tags = namespaceTags.Tags;
+            cloudMapNamespace.Tags = namespaceTags.Tags;
         }
 
         return cloudMapNamespaces;

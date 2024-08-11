@@ -102,12 +102,7 @@ app.MapGet("/prometheus-cm-targets", async (
         var serviceInstances = await cmDiscoveryService.GetServiceInstances(firstService.ServiceSummary.Id);
         // return Results.Ok(serviceInstances);
         var firstServiceInstance = serviceInstances?.FirstOrDefault()!;
-
-        var serviceId = firstService.ServiceSummary.Id;
-        var instanceId = firstServiceInstance.InstanceSummary.Id;
-        var instance = await cmDiscoveryService.GetInstance(serviceId, instanceId);
-
-        return Results.Ok(instance);
+        return Results.Ok(firstServiceInstance);
 
         var templateResponse = new PrometheusTargetsResponse
         {

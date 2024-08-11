@@ -11,7 +11,7 @@ public interface ICloudMapServiceDiscovery
     /// <returns>
     /// List of namespaces, or null if no namespaces are found
     /// </returns>
-    Task<ICollection<NamespaceSummary>> GetNamespaces(ICollection<string> namespaceNames);
+    Task<ICollection<CloudMapNamespace>> GetNamespaces(ICollection<string> namespaceNames);
 
     /// <summary>
     /// Lists all services in a given namespace
@@ -28,15 +28,7 @@ public interface ICloudMapServiceDiscovery
     /// <param name="serviceId">Identifier of the service to list instances for</param>
     /// <returns>Response object from the ListInstances operation, or null if service is not found</returns>
     Task<ICollection<CloudMapServiceInstance>> GetServiceInstances(string serviceId);
-
-    /// <summary>
-    /// Get information about a service instance
-    /// </summary>
-    /// <param name="serviceId">CloudMap service Id</param>
-    /// <param name="instanceId">Identifier of a service instance</param>
-    /// <returns>Response object containing information about service instance</returns>
-    Task<Instance> GetInstance(string serviceId, string instanceId);
-
+    
     /// <summary>
     /// Retrieves tags for a given service discovery resource
     /// </summary>

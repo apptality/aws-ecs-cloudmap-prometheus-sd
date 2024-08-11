@@ -19,7 +19,7 @@ public class CloudMapServiceDiscovery(
     /// <remarks>
     /// Read more about the ListNamespaces API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListNamespacesRequest.html">here</a>
     /// </remarks>
-    public async Task<ICollection<NamespaceSummary>> GetNamespaces(ICollection<string> namespaceNames)
+    public async Task<ICollection<CloudMapNamespace>> GetNamespaces(ICollection<string> namespaceNames)
     {
         var namespaceFilters = NamespaceFilterFactory.Create(namespaceNames);
         var request = new ListNamespacesRequest {Filters = namespaceFilters};
@@ -40,7 +40,10 @@ public class CloudMapServiceDiscovery(
         var namespaces = responses.SelectMany(response => response.Namespaces).ToList();
         logger.LogDebug("Fetched data for the following namespaces: {@Namespaces}", namespaces);
 
-        return namespaces;
+        return namespaces.Select(ns => new CloudMapNamespace
+        {
+            NamespaceSummary = ns
+        }).ToList();
 
         // TODO: Remove
         // Response example structure:
@@ -233,65 +236,7 @@ public class CloudMapServiceDiscovery(
         // }
         // ]
     }
-
-    /// <see cref="ICloudMapServiceDiscovery.GetInstance"/>
-    /// <remarks>
-    /// For more information about the GetInstance API operation, see <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TGetInstanceRequest.html">here</a>
-    /// </remarks>
-    public async Task<Instance> GetInstance(string serviceId, string instanceId)
-    {
-        if (string.IsNullOrWhiteSpace(serviceId))
-        {
-            throw new ArgumentException("Service ID cannot be null or empty", nameof(serviceId));
-        }
-
-        if (string.IsNullOrWhiteSpace(instanceId))
-        {
-            throw new ArgumentException("Instance ID cannot be null or empty", nameof(instanceId));
-        }
-
-        var request = new GetInstanceRequest
-        {
-            ServiceId = serviceId,
-            InstanceId = instanceId
-        };
-
-        var response =
-            await serviceDiscoveryClient.ExecuteWithRetryAsync(async () =>
-                await serviceDiscoveryClient.GetInstanceAsync(request));
-
-        return response.Instance;
-
-        // TODO: Remove
-        // metrics-sd-service-http (service discovery)
-        // {
-        //     "attributes": {
-        //         "AWS_INSTANCE_IPV4": "10.200.65.58",
-        //         "AWS_INIT_HEALTH_STATUS": "UNHEALTHY",
-        //         "AVAILABILITY_ZONE": "us-west-2a",
-        //         "ECS_CLUSTER_NAME": "ecs-cluster-name",
-        //         "ECS_SERVICE_NAME": "service-http",
-        //         "ECS_TASK_DEFINITION_FAMILY": "ecs-service-http",
-        //         "REGION": "us-west-2"
-        //     },
-        //     "creatorRequestId": null,
-        //     "id": "baf2a3419ee446c587cba75766d899f9"
-        // }
-        // service-http (service connect)
-        // {
-        //     "attributes": {
-        //         "AWS_INSTANCE_IPV4": "10.200.65.58",
-        //         "AWS_INSTANCE_PORT": "8080",
-        //         "AvailabilityZone": "us-west-2a",
-        //         "DeploymentId": "arn:aws:ecs:us-west-2:123456789012:task-set/ecs-cluster-name/service-http/ecs-svc/2511542921236936597",
-        //         "IdleTimeoutInSeconds": "0",
-        //         "PerRequestTimeoutInSeconds": "0"
-        //     },
-        //     "creatorRequestId": null,
-        //     "id": "baf2a3419ee446c587cba75766d899f9"
-        // }
-    }
-
+    
     /// <inheritdoc cref="ICloudMapServiceDiscovery.GetTags"/>
     /// <remarks>
     /// Read more about the ListTagsForResource API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListTagsForResourceRequest.html">here</a>
