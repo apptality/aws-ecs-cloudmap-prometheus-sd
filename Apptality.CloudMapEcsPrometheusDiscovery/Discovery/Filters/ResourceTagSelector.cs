@@ -1,4 +1,4 @@
-namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
+namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Filters;
 
 /// <summary>
 /// The Model represents a key-value pair for a resource tag,

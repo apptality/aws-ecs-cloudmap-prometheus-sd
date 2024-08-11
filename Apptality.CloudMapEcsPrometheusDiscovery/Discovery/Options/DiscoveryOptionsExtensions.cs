@@ -1,3 +1,4 @@
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Filters;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;

@@ -9,13 +9,13 @@ public enum DiscoveryLabelPriority
     /// Labels inferred from tags resolved from the AWS CloudMap Service are of the highest priority,
     /// and will take precedence over other tags resolved from parent services/"container" resources.
     /// </summary>
-    CloudMapService = 10,
+    EcsTask = 10,
 
-    CloudMapNamespace = 20,
+    EcsService = 20,
 
-    EcsTask = 30,
+    CloudMapService = 30,
 
-    EcsService = 40,
+    CloudMapNamespace = 40,
 
     /// <summary>
     /// Labels supplied via `ExtraPrometheusLabels` parameter are of the lowest priority, and will

@@ -2,9 +2,8 @@ using Amazon.ServiceDiscovery;
 using Amazon.ServiceDiscovery.Model;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Factories;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Models;
-using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Filters;
 using Apptality.CloudMapEcsPrometheusDiscovery.Extensions;
-using Microsoft.Extensions.Options;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
 
@@ -20,7 +19,7 @@ public class CloudMapServiceDiscovery(
     /// <remarks>
     /// Read more about the ListNamespaces API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListNamespacesRequest.html">here</a>
     /// </remarks>
-    public async Task<List<NamespaceSummary>> GetNamespaces(ICollection<string> namespaceNames)
+    public async Task<ICollection<NamespaceSummary>> GetNamespaces(ICollection<string> namespaceNames)
     {
         var namespaceFilters = NamespaceFilterFactory.Create(namespaceNames);
         var request = new ListNamespacesRequest {Filters = namespaceFilters};
@@ -75,7 +74,7 @@ public class CloudMapServiceDiscovery(
     /// <remarks>
     /// Read more about the ListServices API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListServicesRequest.html">here</a>
     /// </remarks>
-    public async Task<List<ServiceSummary>> GetServices(string namespaceId)
+    public async Task<ICollection<ServiceDiscoveryServiceSummary>> GetServices(string namespaceId)
     {
         var serviceFilters = ServiceFilterFactory.Create(namespaceId);
         var request = new ListServicesRequest {Filters = serviceFilters};
@@ -90,7 +89,14 @@ public class CloudMapServiceDiscovery(
             (requestContinuation, nextToken) => requestContinuation.NextToken = nextToken);
 
         // Merge all responses into a single response
-        return responses.SelectMany(response => response.Services).ToList();
+        return responses
+            .SelectMany(response => response.Services)
+            .Select(serviceSummary => new ServiceDiscoveryServiceSummary
+            {
+                NamespaceId = namespaceId,
+                ServiceSummary = serviceSummary
+            })
+            .ToList();
 
         // TODO: Remove
         // [
@@ -148,7 +154,7 @@ public class CloudMapServiceDiscovery(
     /// <remarks>
     /// Read more about the ListInstances API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListInstancesRequest.html">here</a>
     /// </remarks>
-    public async Task<List<InstanceSummary>> GetServiceInstances(string serviceId)
+    public async Task<ICollection<ServiceDiscoveryInstanceSummary>> GetServiceInstances(string serviceId)
     {
         if (string.IsNullOrWhiteSpace(serviceId))
         {
@@ -164,7 +170,14 @@ public class CloudMapServiceDiscovery(
             (requestContinuation, nextToken) => requestContinuation.NextToken = nextToken);
 
         // Merge all responses into a single response
-        return responses.SelectMany(response => response.Instances).ToList();
+        return responses
+            .SelectMany(response => response.Instances)
+            .Select(instanceSummary => new ServiceDiscoveryInstanceSummary
+            {
+                ServiceId = serviceId,
+                InstanceSummary = instanceSummary
+            })
+            .ToList();
 
         // TODO: Remove
         // service-http (cloud map instances)
@@ -303,7 +316,9 @@ public class CloudMapServiceDiscovery(
             return new ServiceDiscoveryResourceTags(resourceArn, []);
         }
 
-        return new ServiceDiscoveryResourceTags(resourceArn, response.Tags.ToArray());
+        return new ServiceDiscoveryResourceTags(resourceArn,
+            response.Tags.Select(t => new ResourceTag {Key = t.Key, Value = t.Value}).ToArray()
+        );
 
         // TODO: Remove
         // Namespace Tags:

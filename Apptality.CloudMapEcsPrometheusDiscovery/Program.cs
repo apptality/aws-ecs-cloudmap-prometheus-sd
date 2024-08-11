@@ -91,20 +91,20 @@ app.MapGet("/prometheus-cm-targets", async (
         var cnNamespacesIds = cmNamespaces.Select(ns => ns.Id).ToList();
         var cmServices = await cmDiscoveryService.GetServices(cnNamespacesIds.First());
 
-        var firstService = cmServices?.FirstOrDefault(s => s.Name == "service-http"); //metrics-sd-
-        var firstServiceTags = await cmDiscoveryService.GetTags(firstService.Arn);
+        var firstService = cmServices?.FirstOrDefault(s => s.ServiceSummary.Name == "service-http"); //metrics-sd-
+        var firstServiceTags = await cmDiscoveryService.GetTags(firstService.ServiceSummary.Arn);
         //return Results.Ok(firstServiceTags);
         if (firstService == null)
         {
             return Results.NoContent();
         }
 
-        var serviceInstances = await cmDiscoveryService.GetServiceInstances(firstService.Id);
+        var serviceInstances = await cmDiscoveryService.GetServiceInstances(firstService.ServiceSummary.Id);
         // return Results.Ok(serviceInstances);
         var firstServiceInstance = serviceInstances?.FirstOrDefault()!;
 
-        var serviceId = firstService.Id;
-        var instanceId = firstServiceInstance.Id;
+        var serviceId = firstService.ServiceSummary.Id;
+        var instanceId = firstServiceInstance.InstanceSummary.Id;
         var instance = await cmDiscoveryService.GetInstance(serviceId, instanceId);
 
         return Results.Ok(instance);
