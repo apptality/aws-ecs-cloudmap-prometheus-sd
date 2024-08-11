@@ -46,7 +46,7 @@ public static class CloudMapServiceTypeIdentifier
         // The best indicator of a service connect service is
         // Description of the service containing value similar to the following:
         // "Managed by arn:aws:ecs:us-west-1:123456789012:service/ecs-cluster/service-name"
-        var serviceSummaryDescription = cloudMapService.ServiceSummary.Description.ToLower();
+        var serviceSummaryDescription = cloudMapService.ServiceSummary.Description?.ToLower() ?? "";
         if (serviceSummaryDescription.Contains("arn:") &&
             serviceSummaryDescription.Contains(":ecs:") &&
             serviceSummaryDescription.Contains(":service")
