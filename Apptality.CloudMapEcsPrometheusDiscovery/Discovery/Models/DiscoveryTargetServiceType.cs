@@ -41,13 +41,13 @@ public static class DiscoveryTargetServiceTypeIdentifier
     );
 
     public static DiscoveryTargetServiceType IdentifyServiceType(
-        ServiceDiscoveryServiceSummary serviceSummary
+        CloudMapService cloudMapService
     )
     {
         // The best indicator of a service connect service is
         // Description of the service containing value similar to the following:
         // "Managed by arn:aws:ecs:us-west-1:123456789012:service/ecs-cluster/service-name"
-        var serviceSummaryDescription = serviceSummary.ServiceSummary.Description.ToLower();
+        var serviceSummaryDescription = cloudMapService.ServiceSummary.Description.ToLower();
         if (serviceSummaryDescription.Contains("arn:") &&
             serviceSummaryDescription.Contains(":ecs:") &&
             serviceSummaryDescription.Contains(":service")
@@ -57,7 +57,7 @@ public static class DiscoveryTargetServiceTypeIdentifier
         }
 
         // If we can match by tag - highly likely service connect
-        if (ServiceConnectFilter.Matches(serviceSummary.Tags))
+        if (ServiceConnectFilter.Matches(cloudMapService.Tags))
         {
             return DiscoveryTargetServiceType.ServiceConnect;
         }

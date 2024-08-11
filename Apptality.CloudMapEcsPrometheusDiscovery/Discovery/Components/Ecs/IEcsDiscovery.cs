@@ -1,6 +1,5 @@
 using Amazon.ECS.Model;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs.Models;
-using EcsTask = Amazon.ECS.Model.Task;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
 
@@ -12,7 +11,7 @@ public interface IEcsDiscovery
     /// <returns>
     /// List of ECS clusters information
     /// </returns>
-    Task<List<Cluster>> GetClusters(ICollection<string> clusterNames);
+    Task<ICollection<EcsCluster>> GetClusters(ICollection<string> clusterNames);
 
     /// <summary>
     /// Resolves the ECS services information for a given cluster
@@ -36,7 +35,7 @@ public interface IEcsDiscovery
     /// <returns>
     /// List of services descriptions for the given service ARNs
     /// </returns>
-    Task<List<Service>> DescribeServices(ICollection<string> serviceArns);
+    Task<ICollection<EcsService>> DescribeServices(ICollection<string> serviceArns);
 
     /// <summary>
     /// Returns information about running ECS tasks for the given cluster and service
@@ -44,7 +43,7 @@ public interface IEcsDiscovery
     /// <returns>
     /// List of running tasks definitions for the given cluster and service
     /// </returns>
-    Task<EcsRunningTask> GetRunningTasks(string clusterArn, string serviceArn);
+    Task<EcsServiceTasks> GetRunningTasks(string clusterArn, string serviceArn);
 
     /// <summary>
     /// Describes the ECS tasks for the given cluster tasks ARNs
@@ -52,7 +51,7 @@ public interface IEcsDiscovery
     /// <returns>
     /// List of tasks definitions for the given cluster and tasks ARNs
     /// </returns>
-    Task<List<EcsTask>> DescribeTasks(string clusterArn, string[] taskArns);
+    Task<ICollection<EcsTask>> DescribeTasks(string clusterArn, string serviceArn, string[] taskArns);
 
     /// <summary>
     /// Describes the ECS task definition for the given task definition ARN

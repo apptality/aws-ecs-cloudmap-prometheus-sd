@@ -1,3 +1,5 @@
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Models;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
@@ -14,7 +16,12 @@ public class DiscoveryResult
     public required DiscoveryOptions DiscoveryOptions { get; set; }
 
     /// <summary>
-    /// Target that haven been discovered
+    /// Ecs clusters discovered
     /// </summary>
-    public List<DiscoveryTarget> DiscoveryTargets { get; set; } = [];
+    public ICollection<EcsCluster> EcsClusters { get; set; } = [];
+
+    /// <summary>
+    /// CloudMap namespaces discovered
+    /// </summary>
+    public ICollection<CloudMapNamespace> CloudMapNamespaces { get; set; } = [];
 }

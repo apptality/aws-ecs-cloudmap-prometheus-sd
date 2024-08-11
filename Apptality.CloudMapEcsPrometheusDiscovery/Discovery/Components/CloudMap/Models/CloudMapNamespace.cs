@@ -6,10 +6,10 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap
 /// <summary>
 /// Represents a summary of a namespace
 /// </summary>
-public class ServiceDiscoveryNamespaceSummary
+public class CloudMapNamespace
 {
     public string Arn => NamespaceSummary.Arn;
     public required NamespaceSummary NamespaceSummary { get; init; }
-    public ICollection<ServiceDiscoveryServiceSummary> ServiceSummaries { get; set; } = [];
+    public ICollection<CloudMapService> ServiceSummaries { get; set; } = [];
     public ResourceTag[] Tags { get; set; } = [];
 }

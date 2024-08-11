@@ -3,7 +3,6 @@ using Amazon.ECS.Model;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs.Extensions;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Extensions;
-using EcsTask = Amazon.ECS.Model.Task;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
 
@@ -19,7 +18,7 @@ public class EcsDiscovery(
     /// <remarks>
     /// Read more about the DescribeClusters API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ECS/TDescribeClustersRequest.html">here</a>
     /// </remarks>
-    public async Task<List<Cluster>> GetClusters(ICollection<string> clusterNames)
+    public async Task<ICollection<EcsCluster>> GetClusters(ICollection<string> clusterNames)
     {
         if (clusterNames.Count == 0) return [];
 
@@ -39,7 +38,10 @@ public class EcsDiscovery(
             logger.LogWarning("Failures while fetching ECS clusters: {@Failures}", response.Failures);
         }
 
-        return response.Clusters;
+        return response.Clusters.Select(c => new EcsCluster
+        {
+            Cluster = c
+        }).ToList();
 
         // TODO: Remove
         // [
@@ -165,14 +167,14 @@ public class EcsDiscovery(
     /// <remarks>
     /// Read more about the DescribeServices API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ECS/TDescribeServicesRequest.html">here</a>
     /// </remarks>
-    public async Task<List<Service>> DescribeServices(ICollection<string> serviceArns)
+    public async Task<ICollection<EcsService>> DescribeServices(ICollection<string> serviceArns)
     {
         // First, group service ARNs by ECS cluster name
         var serviceArnsByCluster = serviceArns
             .GroupBy(arn => arn.GetEcsClusterName())
             .ToDictionary(g => g.Key, g => g.ToArray());
 
-        var services = new List<Service>();
+        var services = new List<EcsService>();
 
         foreach (var (clusterName, clusterServiceArns) in serviceArnsByCluster)
         {
@@ -206,7 +208,13 @@ public class EcsDiscovery(
                     "Fetched ECS services batch for cluster {ClusterName} with the following response: {@Services}",
                     clusterName, response.Services);
 
-                services.AddRange(response.Services);
+                services.AddRange(
+                    response.Services.Select(s => new EcsService
+                    {
+                        ClusterArn = s.ClusterArn,
+                        Service = s
+                    })
+                );
             }
         }
 
@@ -408,7 +416,7 @@ public class EcsDiscovery(
     /// <remarks>
     /// Read more about the ListTasks API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ECS/TListTasksRequest.html">here</a>
     /// </remarks>
-    public async Task<EcsRunningTask> GetRunningTasks(string clusterArn, string serviceArn)
+    public async Task<EcsServiceTasks> GetRunningTasks(string clusterArn, string serviceArn)
     {
         if (string.IsNullOrWhiteSpace(clusterArn))
             throw new ArgumentException("Cluster ARN must be provided.", nameof(clusterArn));
@@ -438,7 +446,7 @@ public class EcsDiscovery(
             "In ECS cluster {ClusterArn}, found {RunningTaskCount} running tasks for service {ServiceArn}: {@RunningTaskArns}",
             clusterArn, runningTaskArns.Length, serviceArn, runningTaskArns);
 
-        return new EcsRunningTask(clusterArn, serviceArn, runningTaskArns);
+        return new EcsServiceTasks(clusterArn, serviceArn, runningTaskArns);
 
         // TODO: Remove
         // {
@@ -454,7 +462,7 @@ public class EcsDiscovery(
     /// <remarks>
     /// Read more about the DescribeTasks API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ECS/TDescribeTasksRequest.html">here</a>
     /// </remarks>
-    public async Task<List<EcsTask>> DescribeTasks(string clusterArn, string[] taskArns)
+    public async Task<ICollection<EcsTask>> DescribeTasks(string clusterArn, string serviceArn, string[] taskArns)
     {
         if (string.IsNullOrWhiteSpace(clusterArn))
             throw new ArgumentException("Cluster ARN must be provided.", nameof(clusterArn));
@@ -476,7 +484,14 @@ public class EcsDiscovery(
             var request = new DescribeTasksRequest {Cluster = clusterArn, Tasks = taskArnsBatch, Include = ["TAGS"]};
 
             var response = await ecsClient.DescribeTasksAsync(request);
-            tasks.AddRange(response.Tasks);
+            var ecsTasks = response.Tasks.Select(t => new EcsTask
+            {
+                ClusterArn = t.ClusterArn,
+                ServiceArn = serviceArn,
+                Task = t
+            }).ToList();
+
+            tasks.AddRange(ecsTasks);
         }
 
         return tasks;

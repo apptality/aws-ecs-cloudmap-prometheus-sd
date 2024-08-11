@@ -74,7 +74,7 @@ public class CloudMapServiceDiscovery(
     /// <remarks>
     /// Read more about the ListServices API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListServicesRequest.html">here</a>
     /// </remarks>
-    public async Task<ICollection<ServiceDiscoveryServiceSummary>> GetServices(string namespaceId)
+    public async Task<ICollection<CloudMapService>> GetServices(string namespaceId)
     {
         var serviceFilters = ServiceFilterFactory.Create(namespaceId);
         var request = new ListServicesRequest {Filters = serviceFilters};
@@ -91,7 +91,7 @@ public class CloudMapServiceDiscovery(
         // Merge all responses into a single response
         return responses
             .SelectMany(response => response.Services)
-            .Select(serviceSummary => new ServiceDiscoveryServiceSummary
+            .Select(serviceSummary => new CloudMapService
             {
                 NamespaceId = namespaceId,
                 ServiceSummary = serviceSummary
@@ -154,7 +154,7 @@ public class CloudMapServiceDiscovery(
     /// <remarks>
     /// Read more about the ListInstances API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListInstancesRequest.html">here</a>
     /// </remarks>
-    public async Task<ICollection<ServiceDiscoveryInstanceSummary>> GetServiceInstances(string serviceId)
+    public async Task<ICollection<CloudMapServiceInstance>> GetServiceInstances(string serviceId)
     {
         if (string.IsNullOrWhiteSpace(serviceId))
         {
@@ -172,7 +172,7 @@ public class CloudMapServiceDiscovery(
         // Merge all responses into a single response
         return responses
             .SelectMany(response => response.Instances)
-            .Select(instanceSummary => new ServiceDiscoveryInstanceSummary
+            .Select(instanceSummary => new CloudMapServiceInstance
             {
                 ServiceId = serviceId,
                 InstanceSummary = instanceSummary
@@ -296,7 +296,7 @@ public class CloudMapServiceDiscovery(
     /// <remarks>
     /// Read more about the ListTagsForResource API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListTagsForResourceRequest.html">here</a>
     /// </remarks>
-    public async Task<ServiceDiscoveryResourceTags> GetTags(string resourceArn)
+    public async Task<CloudMapResourceTags> GetTags(string resourceArn)
     {
         if (string.IsNullOrWhiteSpace(resourceArn))
         {
@@ -313,10 +313,10 @@ public class CloudMapServiceDiscovery(
         }
         catch (ResourceNotFoundException)
         {
-            return new ServiceDiscoveryResourceTags(resourceArn, []);
+            return new CloudMapResourceTags(resourceArn, []);
         }
 
-        return new ServiceDiscoveryResourceTags(resourceArn,
+        return new CloudMapResourceTags(resourceArn,
             response.Tags.Select(t => new ResourceTag {Key = t.Key, Value = t.Value}).ToArray()
         );
 

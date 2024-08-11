@@ -7,15 +7,15 @@ using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Filters;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 using Microsoft.Extensions.Options;
-using EcsCluster = Amazon.ECS.Model.Cluster;
-using EcsService = Amazon.ECS.Model.Service;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
 
+/// <summary>
+/// Service responsible for discovering ECS clusters and CloudMap namespaces
+/// </summary>
 public class DiscoveryService
 {
     private readonly ILogger<DiscoveryService> _logger;
-    private readonly DiscoveryResult _discoveryResult;
     private readonly IEcsDiscovery _ecsDiscovery;
     private readonly ICloudMapServiceDiscovery _cloudMapServiceDiscovery;
     private readonly DiscoveryOptions _discoveryOptions;
@@ -23,14 +23,12 @@ public class DiscoveryService
     public DiscoveryService(
         ILogger<DiscoveryService> logger,
         IOptions<DiscoveryOptions> discoveryOptions,
-        DiscoveryResult discoveryResult,
         IEcsDiscovery ecsDiscovery,
         ICloudMapServiceDiscovery cloudMapServiceDiscovery
     )
     {
         _logger = logger;
         _discoveryOptions = discoveryOptions.Value;
-        _discoveryResult = discoveryResult;
         _ecsDiscovery = ecsDiscovery;
         _cloudMapServiceDiscovery = cloudMapServiceDiscovery;
     }
@@ -49,7 +47,7 @@ public class DiscoveryService
             cloudMapNamespaces
         );
 
-        // In each CloudMap namespace, find all services that use are registered
+        // In each CloudMap namespace, find all services that are registered
         // using AWS CloudMap Service Connect; this will be required later
         // to map ECS services to CloudMap services.
         // Note - we can only map Service Connect services this way,
@@ -97,34 +95,70 @@ public class DiscoveryService
         // Leave only those services that match the selector tags
         ecsServices = FilterEcsServicesBySelectorTags(ecsServices).ToList();
 
+        // Fetch running tasks for each ECS service
+        await FetchEcsServicesRunningTasks(ecsServices);
+
+        // Now we can map ECS services to clusters
+        MapEcsServicesToClusters(ecsClusters, ecsServices);
+
+        return new DiscoveryResult
+        {
+            DiscoveryOptions = _discoveryOptions,
+            EcsClusters = ecsClusters,
+            CloudMapNamespaces = cloudMapNamespaces
+        };
+    }
+
+    /// <summary>
+    /// Maps ECS services to their respective clusters
+    /// </summary>
+    internal void MapEcsServicesToClusters(ICollection<EcsCluster> ecsClusters, ICollection<EcsService> ecsServices)
+    {
+        // Map ECS services to clusters
+        foreach (var ecsCluster in ecsClusters)
+        {
+            ecsCluster.Services = ecsServices.Where(s => s.ClusterArn == ecsCluster.ClusterArn).ToList();
+        }
+    }
+
+    /// <summary>
+    /// Fetches running tasks for each ECS service and updates the service object
+    /// </summary>
+    /// <param name="ecsServices">
+    /// ECS Services to fetch running tasks for
+    /// </param>
+    internal async Task FetchEcsServicesRunningTasks(ICollection<EcsService> ecsServices)
+    {
         // Now we need to describe running tasks
         // First, group all service ARNs by cluster ARN
         var ecsClusterServicesGroups = ecsServices.Select(s => new {s.ServiceArn, s.ClusterArn}).ToList();
+
+        // This is an ultimate linking point between cluster, service and running task
         var ecsRunningTasksArns = await Task.WhenAll(
             ecsClusterServicesGroups.Select(s => _ecsDiscovery.GetRunningTasks(s.ClusterArn, s.ServiceArn))
         );
-        var ecsRunningTasks = await Task.WhenAll(
-            ecsRunningTasksArns.Select(s => _ecsDiscovery.DescribeTasks(s.ClusterArn, s.RunningTaskArns))
-        );
 
-        // Now assemble discovery targets
-        var discoveryTargets = new List<DiscoveryTarget>();
+        // Describe all running tasks
+        var ecsRunningTasksFutures = ecsRunningTasksArns.Select(s =>
+            _ecsDiscovery.DescribeTasks(s.ClusterArn, s.ServiceArn, s.RunningTaskArns));
 
-        // TODO: Implement constructing discovery targets
+        var ecsRunningTasks = (await Task.WhenAll(ecsRunningTasksFutures))
+            .SelectMany(t => t) // Flatten the list of ECS Tasks
+            .ToList();
 
-        // Wrap it up
-        _discoveryResult.DiscoveryTargets = discoveryTargets;
-        _discoveryResult.DiscoveryOptions = _discoveryOptions;
-
-        return _discoveryResult;
+        // Now map running tasks to services
+        foreach (var ecsService in ecsServices)
+        {
+            ecsService.Tasks = ecsRunningTasks.Where(t => t.ServiceArn == ecsService.ServiceArn).ToList();
+        }
     }
 
     /// <summary>
     /// Maps CloudMap services to their respective namespaces
     /// </summary>
     internal static void MapCloudMapServicesToNamespaces(
-        ICollection<ServiceDiscoveryNamespaceSummary> cloudMapNamespaces,
-        ICollection<ServiceDiscoveryServiceSummary> cloudMapServices)
+        ICollection<CloudMapNamespace> cloudMapNamespaces,
+        ICollection<CloudMapService> cloudMapServices)
     {
         foreach (var cloudMapNamespace in cloudMapNamespaces)
         {
@@ -140,7 +174,7 @@ public class DiscoveryService
     /// <param name="cloudMapServices">
     /// Collection of CloudMap services to fetch instances for
     /// </param>
-    private async Task FetchCloudMapServicesInstances(ICollection<ServiceDiscoveryServiceSummary> cloudMapServices)
+    internal async Task FetchCloudMapServicesInstances(ICollection<CloudMapService> cloudMapServices)
     {
         // Get CloudMap instances for each service
         var cloudMapServiceInstances = (await Task.WhenAll(
@@ -152,7 +186,6 @@ public class DiscoveryService
         {
             cloudMapService.InstanceSummaries = cloudMapServiceInstances
                 .Where(i => i.ServiceId == cloudMapService.ServiceSummary.Id)
-                .Select(i => i.InstanceSummary)
                 .ToList();
         }
     }
@@ -163,7 +196,7 @@ public class DiscoveryService
     /// <returns>
     /// Collection of CloudMap namespaces
     /// </returns>
-    internal async Task<ICollection<ServiceDiscoveryNamespaceSummary>> DiscoverCloudMapNamespaces()
+    internal async Task<ICollection<CloudMapNamespace>> DiscoverCloudMapNamespaces()
     {
         // Get CloudMap namespaces from configuration
         var cloudMapNamespacesNames = _discoveryOptions.GetCloudMapNamespaceNames();
@@ -183,11 +216,11 @@ public class DiscoveryService
         );
 
         // Build a list of CloudMap namespaces with Tags
-        var cloudMapNamespaces = new List<ServiceDiscoveryNamespaceSummary>();
+        var cloudMapNamespaces = new List<CloudMapNamespace>();
 
         foreach (var namespacesSummary in cloudMapNamespacesSummaries)
         {
-            var sdns = new ServiceDiscoveryNamespaceSummary
+            var sdns = new CloudMapNamespace
             {
                 NamespaceSummary = namespacesSummary
             };
@@ -231,11 +264,12 @@ public class DiscoveryService
     /// </returns>
     internal static ICollection<AwsResource> GetCompleteListOfCloudMapNamespaces(
         ICollection<EcsCluster> ecsClusters,
-        ICollection<ServiceDiscoveryNamespaceSummary> cloudMapNamespaces
+        ICollection<CloudMapNamespace> cloudMapNamespaces
     )
     {
         // Get CloudMap namespaces
-        var ecsCloudMapServiceConnectNamespaces = ecsClusters.Select(c => c.ServiceConnectDefaults.Namespace).ToList();
+        var ecsCloudMapServiceConnectNamespaces =
+            ecsClusters.Select(c => c.Cluster.ServiceConnectDefaults.Namespace).ToList();
         var cloudMapServiceConnectNamespaces = cloudMapNamespaces.Select(n => n.Arn).ToList();
         // Join and deduplicate namespaces
         cloudMapServiceConnectNamespaces.AddRange(ecsCloudMapServiceConnectNamespaces);
@@ -287,7 +321,7 @@ public class DiscoveryService
     /// <param name="cloudMapServices">
     /// Collection of CloudMap services to fetch tags for
     /// </param>
-    internal async Task FetchCloudMapServicesTags(ICollection<ServiceDiscoveryServiceSummary> cloudMapServices)
+    internal async Task FetchCloudMapServicesTags(ICollection<CloudMapService> cloudMapServices)
     {
         // For each CloudMap service, get its tags
         var cloudMapServicesTags = await Task.WhenAll(
@@ -314,8 +348,8 @@ public class DiscoveryService
     /// <returns>
     /// New collection of services that match the selector tags
     /// </returns>
-    internal ICollection<ServiceDiscoveryServiceSummary> FilterCloudMapServicesBySelectorTags(
-        ICollection<ServiceDiscoveryServiceSummary> cloudMapServices
+    internal ICollection<CloudMapService> FilterCloudMapServicesBySelectorTags(
+        ICollection<CloudMapService> cloudMapServices
     )
     {
         // Create a filter
@@ -347,7 +381,7 @@ public class DiscoveryService
             .Select(c => Resource.FromObject(
                 c,
                 (s) => s.ServiceArn,
-                (s) => s.Tags.Select(t => new ResourceTag {Key = t.Key, Value = t.Value}).ToList()
+                (s) => s.Service.Tags.Select(t => new ResourceTag {Key = t.Key, Value = t.Value}).ToList()
             )).ToList();
 
         // Apply filter

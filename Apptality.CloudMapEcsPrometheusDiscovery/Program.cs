@@ -47,13 +47,13 @@ app.MapGet("/prometheus-ecs-targets", async (
     //return Results.Ok(ecsClusterServices);
 
     var ecsCloudMapServices =
-        await ecsDiscovery.GetCloudMapServices(firstCluster.ServiceConnectDefaults?.Namespace ?? "");
+        await ecsDiscovery.GetCloudMapServices(firstCluster.Cluster.ServiceConnectDefaults?.Namespace ?? "");
     //return Results.Ok(ecsCloudMapServices);
 
     var ecsServicesDescriptions = await ecsDiscovery.DescribeServices(ecsCloudMapServices.ServiceArns);
     //return Results.Ok(ecsServicesDescriptions);
 
-    var taskDefinitions = ecsServicesDescriptions.Select(s => s.TaskDefinition).ToList();
+    var taskDefinitions = ecsServicesDescriptions.Select(s => s.Service.TaskDefinition).ToList();
     //return Results.Ok(taskDefinitions);
 
     var firstServiceArn = ecsCloudMapServices.ServiceArns.FirstOrDefault();
@@ -66,7 +66,7 @@ app.MapGet("/prometheus-ecs-targets", async (
     //return Results.Ok(runningTasks);
 
     var runningTasksDescriptions =
-        await ecsDiscovery.DescribeTasks(firstCluster.ClusterArn, runningTasks.RunningTaskArns);
+        await ecsDiscovery.DescribeTasks(firstCluster.ClusterArn, firstServiceArn, runningTasks.RunningTaskArns);
     // return Results.Ok(runningTasksDescriptions);
 
     var runningTasksDefinition = await ecsDiscovery.DescribeTaskDefinition(taskDefinitions.First());

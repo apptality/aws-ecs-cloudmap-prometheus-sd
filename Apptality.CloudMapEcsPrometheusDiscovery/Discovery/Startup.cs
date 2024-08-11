@@ -30,9 +30,6 @@ public static class Startup
     /// </summary>
     private static WebApplicationBuilder AddDiscoveryServices(this WebApplicationBuilder builder)
     {
-        // Registers discovery context as a scoped injectable,
-        // so that multiple services can share the same state.
-        builder.Services.AddScoped<DiscoveryResult>();
         builder.Services.AddScoped<DiscoveryService>();
         return builder;
     }
