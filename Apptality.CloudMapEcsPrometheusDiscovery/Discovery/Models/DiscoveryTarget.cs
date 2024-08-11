@@ -1,3 +1,5 @@
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Models;
+
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 
 /// <summary>
@@ -11,9 +13,9 @@ public sealed class DiscoveryTarget
     public string ServiceDiscoveryInstanceId { get; set; }
 
     /// <summary>
-    /// Helps to determine whether target is a service connect or service discovery target
+    /// Determines whether target is a service connect or service discovery target
     /// </summary>
-    public DiscoveryTargetServiceType? ServiceType { get; set; } = null;
+    public CloudMapServiceType? ServiceType { get; set; } = null;
 
     /// <summary>
     /// IP Address of the ECS task

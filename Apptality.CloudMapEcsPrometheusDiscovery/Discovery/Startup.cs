@@ -30,7 +30,7 @@ public static class Startup
     /// </summary>
     private static WebApplicationBuilder AddDiscoveryServices(this WebApplicationBuilder builder)
     {
-        builder.Services.AddScoped<DiscoveryService>();
+        builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
         return builder;
     }
 

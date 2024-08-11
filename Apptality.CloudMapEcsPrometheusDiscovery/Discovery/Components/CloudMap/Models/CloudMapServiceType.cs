@@ -1,7 +1,6 @@
-using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Filters;
 
-namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
+namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Models;
 
 /// <summary>
 /// Helps to identify the type of service that is being discovered
@@ -9,7 +8,7 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 /// <remarks>
 /// Please read more about the differences <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/interconnecting-services.html">here</a>
 /// </remarks>
-public enum DiscoveryTargetServiceType
+public enum CloudMapServiceType
 {
     /// <summary>
     /// Represents the fact that the service is a service connect service
@@ -25,7 +24,7 @@ public enum DiscoveryTargetServiceType
 /// <summary>
 /// Helper class to identify the type of service that is being discovered.
 /// </summary>
-public static class DiscoveryTargetServiceTypeIdentifier
+public static class CloudMapServiceTypeIdentifier
 {
     /// <summary>
     /// We can identify a service connect service by the presence of the AmazonECSManaged tag
@@ -40,7 +39,7 @@ public static class DiscoveryTargetServiceTypeIdentifier
         ]
     );
 
-    public static DiscoveryTargetServiceType IdentifyServiceType(
+    public static CloudMapServiceType IdentifyServiceType(
         CloudMapService cloudMapService
     )
     {
@@ -53,17 +52,17 @@ public static class DiscoveryTargetServiceTypeIdentifier
             serviceSummaryDescription.Contains(":service")
            )
         {
-            return DiscoveryTargetServiceType.ServiceConnect;
+            return CloudMapServiceType.ServiceConnect;
         }
 
         // If we can match by tag - highly likely service connect
         if (ServiceConnectFilter.Matches(cloudMapService.Tags))
         {
-            return DiscoveryTargetServiceType.ServiceConnect;
+            return CloudMapServiceType.ServiceConnect;
         }
 
         // If we were unable to identify the service as a service connect service
         // we can assume it is a service discovery service
-        return DiscoveryTargetServiceType.ServiceDiscovery;
+        return CloudMapServiceType.ServiceDiscovery;
     }
 }

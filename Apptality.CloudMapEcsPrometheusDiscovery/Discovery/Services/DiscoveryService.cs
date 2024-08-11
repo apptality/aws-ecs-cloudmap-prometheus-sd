@@ -13,7 +13,7 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
 /// <summary>
 /// Service responsible for discovering ECS clusters and CloudMap namespaces
 /// </summary>
-public class DiscoveryService
+public class DiscoveryService : IDiscoveryService
 {
     private readonly ILogger<DiscoveryService> _logger;
     private readonly IEcsDiscovery _ecsDiscovery;
@@ -79,6 +79,9 @@ public class DiscoveryService
         // Fetch service instances for each CloudMap service
         await FetchCloudMapServicesInstances(cloudMapServices);
 
+        // Identify CloudMap service types for each service
+        IdentifyCloudMapServiceTypes(cloudMapServices);
+
         // Now that all services are fetched,
         // we can map CloudMap services to namespaces
         MapCloudMapServicesToNamespaces(cloudMapNamespaces, cloudMapServices);
@@ -107,6 +110,20 @@ public class DiscoveryService
             EcsClusters = ecsClusters,
             CloudMapNamespaces = cloudMapNamespaces
         };
+    }
+
+    /// <summary>
+    /// Identifies CloudMap service types based on the service metadata
+    /// </summary>
+    /// <param name="cloudMapServices">
+    /// Collection of CloudMap services to identify types for
+    /// </param>
+    private void IdentifyCloudMapServiceTypes(ICollection<CloudMapService> cloudMapServices)
+    {
+        foreach (var cloudMapService in cloudMapServices)
+        {
+            cloudMapService.ServiceType = CloudMapServiceTypeIdentifier.IdentifyServiceType(cloudMapService);
+        }
     }
 
     /// <summary>

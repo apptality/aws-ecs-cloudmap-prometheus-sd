@@ -12,4 +12,5 @@ public class CloudMapService
     public required ServiceSummary ServiceSummary { get; init; }
     public ResourceTag[] Tags { get; set; } = [];
     public ICollection<CloudMapServiceInstance> InstanceSummaries { get; set; } = [];
+    public CloudMapServiceType? ServiceType { get; set; } = null;
 }
