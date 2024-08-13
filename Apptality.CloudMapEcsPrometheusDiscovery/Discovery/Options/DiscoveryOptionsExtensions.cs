@@ -79,7 +79,7 @@ public static class DiscoveryOptionsExtensions
     /// </summary>
     public static ICollection<string> GetEcsServiceTagFilters(this DiscoveryOptions discoveryOptions)
     {
-        return GetTagKeyFilters(discoveryOptions, x => x.EcsServiceSelectorTags);
+        return GetTagKeyFilters(discoveryOptions, x => x.EcsServiceTags);
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public static class DiscoveryOptionsExtensions
     /// </summary>
     public static ICollection<string> GetCloudMapServiceTagFilters(this DiscoveryOptions discoveryOptions)
     {
-        return GetTagKeyFilters(discoveryOptions, x => x.CloudMapServiceSelectorTags);
+        return GetTagKeyFilters(discoveryOptions, x => x.CloudMapServiceTags);
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ public static class DiscoveryOptionsExtensions
     /// </summary>
     public static ICollection<string> GetCloudMapNamespaceTagFilters(this DiscoveryOptions discoveryOptions)
     {
-        return GetTagKeyFilters(discoveryOptions, x => x.CloudMapNamespaces);
+        return GetTagKeyFilters(discoveryOptions, x => x.CloudMapNamespaceTags);
     }
 
     /// <summary>

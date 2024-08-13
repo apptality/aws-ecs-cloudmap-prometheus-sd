@@ -1,3 +1,4 @@
+using System.Collections;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 
@@ -67,9 +68,27 @@ public class DiscoveryTargetBuilder
 
     public DiscoveryTargetBuilder WithLabels(ICollection<DiscoveryLabel> labels)
     {
-        _discoveryTarget.Labels.AddRange(labels);
+        // We can only add labels with the same Name of a higher priority
+        // (lower value of DiscoveryLabelPriority property)
+        foreach (var label in labels)
+        {
+            var existingLabel = _discoveryTarget.Labels.FirstOrDefault(l => l.Name == label.Name);
+            if (existingLabel != null && existingLabel.Priority <= label.Priority) continue;
+            // remove label with lower priority and add new label
+            _discoveryTarget.Labels.RemoveAll(l => l.Name == label.Name);
+            _discoveryTarget.Labels.Add(label);
+        }
+
         return this;
     }
+
+    public DiscoveryTargetBuilder WithoutLabels(ICollection<DiscoveryLabel> labels)
+    {
+        _discoveryTarget.Labels.RemoveAll(l => labels.Select(lb => lb.Name).Contains(l.Name));
+        return this;
+    }
+
+    public ICollection<DiscoveryLabel> Labels => _discoveryTarget.Labels;
 
     public DiscoveryTarget Build()
     {

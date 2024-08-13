@@ -126,9 +126,6 @@ public class DiscoveryTargetFactory
                     );
                     builder.WithLabels(ecsServiceLabels);
 
-                    // Build the target
-                    var target = builder.Build();
-
                     // Now
                     var metricsPathPortMatcher = discoveryResult.DiscoveryOptions.MetricsPathPortTagPrefix;
                     // Translate to pattern
@@ -136,7 +133,7 @@ public class DiscoveryTargetFactory
                     var metricsPortPattern = $"{metricsPathPortMatcher}PORT*".ConvertToRegexString();
 
                     // Now match all labels that match the pattern
-                    var metricsPathPortLabels = target.Labels
+                    var metricsPathPortLabels = builder.Labels
                         .Where(label => label.Name.Match([metricsPathPattern, metricsPortPattern]))
                         .ToList();
 
@@ -157,14 +154,27 @@ public class DiscoveryTargetFactory
                         .Select(group => group.ToList())
                         .ToList();
 
-                    // TODO: Extract the metrics path and port from the pairs
+                    // Extract the metrics path and port from the pairs into ScrapeConfigurations
+                    var scrapeConfigurations = metricsPathPortPairs
+                        .Select(pair =>
+                        {
+                            var path = pair.FirstOrDefault(label => label.Name.Contains("_PATH"))?.Value ?? "/metrics";
+                            var port = ushort.Parse(pair.FirstOrDefault(label => label.Name.Contains("_PORT"))?.Value ?? "80");
+                            return new ScrapeConfiguration
+                            {
+                                MetricsPath = path,
+                                Port = port
+                            };
+                        })
+                        .ToList();
 
-                    // TODO: Squash labels by priority
+                    // Add the scrape configurations
+                    builder.WithScrapeConfigurations(scrapeConfigurations);
 
                     // Remove all such labels from the target
-                    target.Labels.RemoveAll(label => metricsPathPortLabels.Contains(label));
+                    builder.WithoutLabels(metricsPathPortLabels);
 
-                    discoveryTargets.Add(target);
+                    discoveryTargets.Add(builder.Build());
                 }
             }
         }
