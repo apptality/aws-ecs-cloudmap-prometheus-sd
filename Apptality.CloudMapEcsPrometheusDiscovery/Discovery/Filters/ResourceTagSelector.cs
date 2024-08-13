@@ -8,8 +8,5 @@ public sealed class ResourceTagSelector
 {
     public string Key { get; init; } = default!;
     public string? Value { get; init; }
-
-    public bool HasValue => Value is not null;
-
     public bool IsValueWildcard => Value == "*";
 }

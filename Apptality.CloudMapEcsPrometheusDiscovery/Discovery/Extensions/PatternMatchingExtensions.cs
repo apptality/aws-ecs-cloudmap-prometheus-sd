@@ -10,19 +10,20 @@ public static class PatternMatchingExtensions
     /// <summary>
     /// Function to match values against patterns
     /// </summary>
-    /// <param name="values">
-    /// Array of values to match against patterns
+    /// <param name="value">
+    /// Value to match against patterns
     /// </param>
     /// <param name="patterns">
-    /// Array of patterns to match against values
+    /// Collection of patterns to match against
     /// </param>
     /// <returns>
-    /// Any value that matches any of the patterns
+    /// True if the value matches any of the patterns, false otherwise
     /// </returns>
-    public static IEnumerable<string> Match(IEnumerable<string> values, IEnumerable<string> patterns)
+    public static bool Match(this string value, ICollection<string> patterns)
     {
-        var regexPatterns = patterns.Where(s => !string.IsNullOrWhiteSpace(s)).Select(ConvertToRegex).ToList();
-        return values.Where(value => regexPatterns.Any(pattern => Regex.IsMatch(value, pattern)));
+        return patterns
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Any(pattern => Regex.IsMatch(value, pattern));
     }
 
     /// <summary>
@@ -34,7 +35,7 @@ public static class PatternMatchingExtensions
     /// <returns>
     /// Regex pattern
     /// </returns>
-    private static string ConvertToRegex(string pattern)
+    public static string ConvertToRegexString(this string pattern)
     {
         if (!pattern.Contains('*') && !pattern.Contains('?'))
         {

@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 using Apptality.CloudMapEcsPrometheusDiscovery.Models;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Extensions;

@@ -1,11 +1,10 @@
-using Amazon.ServiceDiscovery.Model;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Factories;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
 using Apptality.CloudMapEcsPrometheusDiscovery.Infrastructure;
-using Apptality.CloudMapEcsPrometheusDiscovery.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Responses;
 using Microsoft.Extensions.Options;
 
@@ -26,7 +25,10 @@ logger.LogInformation("Started 'ECS Prometheus Discovery' application");
 
 app.MapGet("/prometheus-targets", async (IDiscoveryService discoveryService) =>
 {
-    var discoveryContext = await discoveryService.Discover();
+    var discoveryResult = await discoveryService.Discover();
+    var discoveryTargetFactory = new DiscoveryTargetFactory();
+    var discoveryTargets = discoveryTargetFactory.Create(discoveryResult);
+    return Results.Ok(new {hello = "world"});
 });
 
 app.MapGet("/prometheus-ecs-targets", async (

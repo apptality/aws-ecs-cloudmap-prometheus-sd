@@ -2,11 +2,8 @@ using Amazon.ECS;
 using Amazon.ServiceDiscovery;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
-using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery;
 
@@ -32,10 +29,11 @@ public static class Startup
     /// </summary>
     private static WebApplicationBuilder AddDiscoveryServices(this WebApplicationBuilder builder)
     {
-        // original service
+        // Discovery services
         builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
-        // cached decorator
         builder.Services.Decorate<IDiscoveryService, CachedDiscoveryService>();
+        // Factories
+        // TODO: TBD
         return builder;
     }
 

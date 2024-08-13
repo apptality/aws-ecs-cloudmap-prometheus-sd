@@ -6,7 +6,7 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Filters;
 public class ResourceTag
 {
     public string Key { get; init; } = default!;
-    public string? Value { get; init; }
+    public string Value { get; init; } = default!;
 
     /// <summary>
     /// Returns true if the tag matches any the selectors provided

@@ -5,6 +5,10 @@ using Microsoft.Extensions.Options;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
 
+/// <summary>
+/// Cached discovery service that wraps an original discovery service
+/// and caches its result for a period of time
+/// </summary>
 public class CachedDiscoveryService : IDiscoveryService
 {
     private readonly ILogger<CachedDiscoveryService> _logger;
@@ -32,14 +36,14 @@ public class CachedDiscoveryService : IDiscoveryService
         var cacheKey = "discovery-service-cache-key";
         if (_cache.TryGetValue<DiscoveryResult>(cacheKey, out var discoveryResult))
         {
-            _logger.LogInformation("Returning cached discovery result");
+            _logger.LogDebug("Returning cached discovery result");
             if (discoveryResult != null)
             {
                 return discoveryResult;
             }
         }
 
-        _logger.LogInformation("Cache miss, calling original service");
+        _logger.LogDebug("Cache miss, calling original service");
         discoveryResult = await _originalService.Discover();
         _cache.Set(cacheKey, discoveryResult, TimeSpan.FromSeconds(_discoveryOptions.Value.CacheTtlSeconds));
 

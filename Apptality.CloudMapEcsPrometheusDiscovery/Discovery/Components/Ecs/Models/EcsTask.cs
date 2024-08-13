@@ -1,3 +1,4 @@
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Filters;
 using Task = Amazon.ECS.Model.Task;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs.Models;
@@ -24,4 +25,10 @@ public class EcsTask
     {
         return Task.Containers.FirstOrDefault()?.NetworkInterfaces.FirstOrDefault()?.PrivateIpv4Address ?? string.Empty;
     }
+
+    internal ICollection<ResourceTag> Tags =>
+        Task.Tags.Select(t => new ResourceTag
+        {
+            Key = t.Key, Value = t.Value
+        }).ToList();
 }

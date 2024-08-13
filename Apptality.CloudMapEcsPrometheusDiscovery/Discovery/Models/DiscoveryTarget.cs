@@ -8,19 +8,44 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 public sealed class DiscoveryTarget
 {
     /// <summary>
-    /// Identifier of Service Discovery instance
+    /// CloudMap Service Name
     /// </summary>
-    public string ServiceDiscoveryInstanceId { get; set; }
+    public string CloudMapServiceName { get; set; } = default!;
 
     /// <summary>
-    /// Determines whether target is a service connect or service discovery target
+    /// Identifier of CloudMap Service Instance
+    /// </summary>
+    public string CloudMapServiceInstanceId { get; set; } = default!;
+
+    /// <summary>
+    /// Specifies whether target is a 'Service Connect' or 'Service Discovery' target
     /// </summary>
     public CloudMapServiceType? ServiceType { get; set; } = null;
 
     /// <summary>
+    /// Name of the ECS cluster
+    /// </summary>
+    public string EcsCluster { get; set; } = default!;
+
+    /// <summary>
+    /// Name of the ECS service
+    /// </summary>
+    public string EcsService { get; set; } = default!;
+
+    /// <summary>
+    /// Ecs Task Definition Arn
+    /// </summary>
+    public string EcsTaskDefinitionArn { get; set; } = default!;
+
+    /// <summary>
+    /// Ecs Task Arn
+    /// </summary>
+    public string EcsTaskArn { get; set; } = default!;
+
+    /// <summary>
     /// IP Address of the ECS task
     /// </summary>
-    public string IpAddress { get; set; }
+    public string IpAddress { get; set; } = default!;
 
     /// <summary>
     /// Each task can have multiple ports exposed, with each port having a different scrape configuration
@@ -30,31 +55,6 @@ public sealed class DiscoveryTarget
     /// Thus, having at least two scrape configurations for each task.
     /// </remarks>
     public List<ScrapeConfiguration> ScrapeConfigurations { get; set; } = [];
-
-    /// <summary>
-    /// CloudMap namespace name
-    /// </summary>
-    public string CloudMapNamespace { get; set; }
-
-    /// <summary>
-    /// Name of the ECS cluster
-    /// </summary>
-    public string EcsCluster { get; set; }
-
-    /// <summary>
-    /// Name of the ECS service
-    /// </summary>
-    public string EcsService { get; set; }
-
-    /// <summary>
-    /// Name of the ECS task definition
-    /// </summary>
-    public string EcsTaskDefinition { get; set; }
-
-    /// <summary>
-    /// Ecs Task Id
-    /// </summary>
-    public string EcsTaskId { get; set; }
 
     /// <summary>
     /// Additional metadata labels resolved for given target

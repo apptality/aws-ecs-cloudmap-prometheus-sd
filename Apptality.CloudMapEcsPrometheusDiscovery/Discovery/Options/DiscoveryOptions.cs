@@ -54,12 +54,6 @@ public class DiscoveryOptions : IValidatableObject
     // with the same key, the value from the ECS Task will be used.
 
     /// <summary>
-    /// When non-empty, tags that match from ECS services
-    /// are included in the service discovery results as labels.
-    /// </summary>
-    public string EcsServiceTags { get; set; } = string.Empty;
-
-    /// <summary>
     /// When non-empty, tags that match from ECS tasks
     /// are included in the service discovery results as labels.
     /// </summary>
@@ -72,16 +66,22 @@ public class DiscoveryOptions : IValidatableObject
     public string EcsTaskTags { get; set; } = string.Empty;
 
     /// <summary>
-    /// When non-empty, tags that match from Cloud Map namespaces
+    /// When non-empty, tags that match from ECS services
     /// are included in the service discovery results as labels.
     /// </summary>
-    public string CloudMapNamespaceTags { get; set; } = string.Empty;
+    public string EcsServiceTags { get; set; } = string.Empty;
 
     /// <summary>
     /// When non-empty, tags that match from Cloud Map services
     /// are included in the service discovery results as labels.
     /// </summary>
     public string CloudMapServiceTags { get; set; } = string.Empty;
+
+    /// <summary>
+    /// When non-empty, tags that match from Cloud Map namespaces
+    /// are included in the service discovery results as labels.
+    /// </summary>
+    public string CloudMapNamespaceTags { get; set; } = string.Empty;
 
     /// <summary>
     /// Semicolon separated string of static labels to include in the
@@ -140,9 +140,9 @@ public class DiscoveryOptions : IValidatableObject
     /// <li>SD_METRICS_PORT_SVC-ONE = 9001</li>
     /// </ul>
     /// </para>
-    /// <para>
+    /// If a path is not provided, default path "/metrics" will be used.
+    /// <br />
     /// Here is a regex to match the tags: ^SD_METRICS_(PATH|PORT)\w+$
-    /// </para>
     /// </remarks>
     [MinLength(3)]
     public string MetricsPathPortTagPrefix { get; set; } = "SD_METRICS_";

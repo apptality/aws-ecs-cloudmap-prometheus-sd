@@ -179,9 +179,10 @@ public class DiscoveryService : IDiscoveryService
     {
         foreach (var cloudMapNamespace in cloudMapNamespaces)
         {
-            cloudMapNamespace.ServiceSummaries = cloudMapServices
+            var relatedServiceSummaries = cloudMapServices
                 .Where(s => s.NamespaceId == cloudMapNamespace.NamespaceSummary.Id)
                 .ToList();
+            cloudMapNamespace.SetServiceSummaries(relatedServiceSummaries);
         }
     }
 
