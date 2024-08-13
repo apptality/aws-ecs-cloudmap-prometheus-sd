@@ -23,12 +23,14 @@ app.UseInfrastructure();
 var logger = app.Services.GetService<ILogger<Program>>()!;
 logger.LogInformation("Started 'ECS Prometheus Discovery' application");
 
-app.MapGet("/prometheus-targets", async (IDiscoveryService discoveryService) =>
+app.MapGet("/prometheus-targets", async (
+    IDiscoveryService discoveryService,
+    IDiscoveryTargetFactory discoveryTargetFactory
+) =>
 {
     var discoveryResult = await discoveryService.Discover();
-    var discoveryTargetFactory = new DiscoveryTargetFactory();
     var discoveryTargets = discoveryTargetFactory.Create(discoveryResult);
-    return Results.Ok(new {hello = "world"});
+    return Results.Ok(discoveryTargets);
 });
 
 app.MapGet("/prometheus-ecs-targets", async (

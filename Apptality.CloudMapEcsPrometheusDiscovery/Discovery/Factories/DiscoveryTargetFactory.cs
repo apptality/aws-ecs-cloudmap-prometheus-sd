@@ -9,8 +9,9 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Factories;
 /// <summary>
 /// Factory for creating DiscoveryTarget objects from a DiscoveryResult
 /// </summary>
-public class DiscoveryTargetFactory
+public class DiscoveryTargetFactory : IDiscoveryTargetFactory
 {
+    /// <inheritdoc cref="IDiscoveryTargetFactory.Create"/>
     public ICollection<DiscoveryTarget> Create(DiscoveryResult discoveryResult)
     {
         var discoveryTargets = new List<DiscoveryTarget>();

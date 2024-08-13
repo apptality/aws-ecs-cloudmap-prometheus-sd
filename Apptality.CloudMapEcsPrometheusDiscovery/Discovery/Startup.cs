@@ -2,6 +2,7 @@ using Amazon.ECS;
 using Amazon.ServiceDiscovery;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Factories;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
 
@@ -33,7 +34,7 @@ public static class Startup
         builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
         builder.Services.Decorate<IDiscoveryService, CachedDiscoveryService>();
         // Factories
-        // TODO: TBD
+        builder.Services.AddSingleton<IDiscoveryTargetFactory, DiscoveryTargetFactory>();
         return builder;
     }
 
