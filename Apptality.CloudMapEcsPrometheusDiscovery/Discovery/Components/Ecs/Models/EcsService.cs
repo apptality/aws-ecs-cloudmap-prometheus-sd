@@ -11,6 +11,7 @@ public class EcsService
     public string ServiceArn => Service.ServiceArn;
     public string ServiceName => Service.ServiceName;
     public required string ClusterArn { get; init; }
+    public string ClusterName => ClusterArn.Split('/').Last();
     public required Service Service { get; init; }
     public ICollection<EcsTask> Tasks { get; set; } = [];
 

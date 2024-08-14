@@ -16,14 +16,14 @@ public class CloudMapService
     public CloudMapServiceType? ServiceType { get; set; }
 
     /// <summary>
-    /// Returns all instances that match the provided ip address
+    /// Returns instance that match the provided ip address
     /// </summary>
     /// <param name="ip">IP address to match on</param>
     /// <returns>
     /// All CloudMap service instances that match the provided IP address
     /// </returns>
-    public ICollection<CloudMapServiceInstance> FindInstanceByIp(string ip)
+    public CloudMapServiceInstance? FindInstanceByIp(string ip)
     {
-        return InstanceSummaries.Where(instance => instance.IpAddress() == ip).ToList();
+        return InstanceSummaries.FirstOrDefault(instance => instance.IpAddress() == ip);
     }
 }

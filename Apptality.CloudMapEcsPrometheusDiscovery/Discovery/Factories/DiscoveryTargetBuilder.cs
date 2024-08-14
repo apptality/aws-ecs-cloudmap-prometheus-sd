@@ -1,4 +1,3 @@
-using System.Collections;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap.Models;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 

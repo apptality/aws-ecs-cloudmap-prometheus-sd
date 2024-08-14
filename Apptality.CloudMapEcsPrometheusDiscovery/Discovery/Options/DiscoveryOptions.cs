@@ -94,7 +94,7 @@ public class DiscoveryOptions : IValidatableObject
 
     /// <summary>
     /// Specifies how long to cache the service discovery results in seconds. Default is five seconds.
-    ///  </summary>
+    /// </summary>
     /// <remarks>
     /// When caching is disabled, the service discovery results are queried every time a service response is requested.
     /// Min value - 0 seconds (no caching). Max value - 65535 seconds.
@@ -106,46 +106,49 @@ public class DiscoveryOptions : IValidatableObject
     public ushort CacheTtlSeconds { get; set; } = 60;
 
     /// <summary>
-    /// Tag prefix to identify metrics path and port.
+    /// Tag prefix to identify a metrics path, port, and name.
     /// Must be at least three characters long and end with an underscore.
     /// </summary>
     /// <remarks>
-    /// <para>
     /// This prefix has a special meaning and is used to identify the metrics path and port
-    /// for the service. 'PATH' and 'PORT' will be appended to the prefix to identify the
-    /// metrics path and port respectively.
-    /// </para>
+    /// for the service. PATH, PORT, NAME will be appended to the prefix to identify
+    /// metrics path, port, and container names respectively.
     /// <para>
     /// If your service contains multiple metrics paths
     /// or ports, you can tag your resources using the following format:
     /// <ul>
-    /// <li>SD_METRICS_PATH_1 = /metrics</li>
-    /// <li>SD_METRICS_PORT_1 = 9001</li>
-    /// <li>SD_METRICS_PATH_2 = /metrics2</li>
-    /// <li>SD_METRICS_PORT_2 = 9002</li>
+    /// <li>METRICS_PATH_1 = /metrics</li>
+    /// <li>METRICS_PORT_1 = 9001</li>
+    /// <li>METRICS_NAME_1 = application</li>
+    /// <li>METRICS_PATH_2 = /metrics2</li>
+    /// <li>METRICS_PORT_2 = 9002</li>
+    /// <li>METRICS_NAME_2 = sidecar</li>
     /// </ul>
     /// ..etc.
     /// </para>
     /// <para>
-    /// System won't care for anything after _PATH or _PORT,
-    /// so as long as these postfixes come in pairs,
+    /// System will not care of anything after _PATH, _PORT, or _NAME,
+    /// so as long as these postfixes are identical for triplets,
     /// you can use any postfix (including empty) you prefer,
-    /// which makes the following combination also equally valid:
+    /// which makes the following combination valid:
     /// <ul>
-    /// <li>SD_METRICS_PATH = /metrics</li>
-    /// <li>SD_METRICS_PORT = 9001</li>
+    /// <li>METRICS_PATH = /metrics</li>
+    /// <li>METRICS_PORT = 9001</li>
     /// </ul>
     /// <ul>
-    /// <li>SD_METRICS_PATH_SVC-ONE = /metrics</li>
-    /// <li>SD_METRICS_PORT_SVC-ONE = 9001</li>
+    /// <li>METRICS_PATH_SVC-ONE = /metrics</li>
+    /// <li>METRICS_PORT_SVC-ONE = 9001</li>
+    /// <li>METRICS_NAME_SVC-ONE = svc-one</li>
     /// </ul>
     /// </para>
     /// If a path is not provided, default path "/metrics" will be used.
     /// <br />
-    /// Here is a regex to match the tags: ^SD_METRICS_(PATH|PORT)\w+$
+    /// If a name is not provided, the service name will be omitted from labels.
+    /// <br />
+    /// Here is an example of regex to match the tags: ^METRICS_(PATH|PORT|NAME)\w+$
     /// </remarks>
     [MinLength(3)]
-    public string MetricsPathPortTagPrefix { get; set; } = "SD_METRICS_";
+    public string MetricsPathPortTagPrefix { get; set; } = "METRICS_";
 
     /// <summary>
     /// Validates the discovery options

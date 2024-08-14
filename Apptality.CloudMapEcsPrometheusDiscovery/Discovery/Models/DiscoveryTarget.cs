@@ -68,6 +68,7 @@ public sealed class DiscoveryTarget
 /// </summary>
 public sealed class ScrapeConfiguration
 {
+    public string Name { get; set; } = default!;
     public ushort Port { get; set; }
     public string MetricsPath { get; set; } = "/metrics";
 }
