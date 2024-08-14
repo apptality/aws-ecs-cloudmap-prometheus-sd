@@ -41,12 +41,6 @@ public class DiscoveryService : IDiscoveryService
         // Get CloudMap namespaces
         var cloudMapNamespaces = await DiscoverCloudMapNamespaces();
 
-        // Build a complete list of CloudMap namespaces resources
-        var cloudMapServiceConnectNamespacesResources = GetCompleteListOfCloudMapNamespaces(
-            ecsClusters,
-            cloudMapNamespaces
-        );
-
         // In each CloudMap namespace, find all services that are registered
         // using AWS CloudMap Service Connect; this will be required later
         // to map ECS services to CloudMap services.
@@ -61,6 +55,22 @@ public class DiscoveryService : IDiscoveryService
             ecsClusters,
             ecsCloudMapServiceConnectServices
         );
+
+        // If we didn't discover clusters from the configuration,
+        // and we added clusters ARNs inferred from CloudMap services,
+        // then we need to update the list of ECS clusters
+        await FetchMissingEcsClusters(ecsClusters, allEcsClusterResources);
+
+        // Build a complete list of CloudMap namespaces resources
+        var cloudMapServiceConnectNamespacesResources = GetCompleteListOfCloudMapNamespaces(
+            ecsClusters,
+            cloudMapNamespaces
+        );
+
+        // If we didn't discover namespaces from the configuration,
+        // and we added namespaces ARNs inferred from ECS services,
+        // then we need to update the list of CloudMap namespaces
+        await FetchMissingCloudMapNamespaces(cloudMapNamespaces, cloudMapServiceConnectNamespacesResources);
 
         // Get CloudMap services from each namespace
         var cloudMapServicesIds = cloudMapServiceConnectNamespacesResources.Select(s => s.Arn.Split('/')[1]);
@@ -110,6 +120,55 @@ public class DiscoveryService : IDiscoveryService
             EcsClusters = ecsClusters,
             CloudMapNamespaces = cloudMapNamespaces
         };
+    }
+
+    /// <summary>
+    /// Compares the list of CloudMap namespaces with the list of all CloudMap namespace resources,
+    /// and fetches the missing CloudMap namespaces
+    /// </summary>
+    /// <param name="cloudMapNamespaces">CloudMap Namespaces Already Discovered</param>
+    /// <param name="cloudMapServiceConnectNamespacesResources">CloudMap Service Connect Namespaces Resources required</param>
+    private async Task FetchMissingCloudMapNamespaces(ICollection<CloudMapNamespace> cloudMapNamespaces, ICollection<AwsResource> cloudMapServiceConnectNamespacesResources)
+    {
+        // If we inferred CloudMap namespaces from ECS services, we need to fetch them
+        var missingCloudMapNamespaces = cloudMapServiceConnectNamespacesResources
+            .Where(r => cloudMapNamespaces.All(c => c.Arn != r.Arn))
+            .Select(r => r.Arn)
+            .ToList();
+
+        if (missingCloudMapNamespaces.Count > 0)
+        {
+            var missingCloudMapNamespacesData = await _cloudMapServiceDiscovery.GetNamespaces(missingCloudMapNamespaces);
+            foreach (var missingCloudMapNamespace in missingCloudMapNamespacesData)
+            {
+                cloudMapNamespaces.Add(missingCloudMapNamespace);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Compares the list of ECS clusters with the list of all ECS cluster resources,
+    /// and fetches the missing ECS clusters
+    /// </summary>
+    /// <param name="ecsClusters">ECS Clusters Already discovered</param>
+    /// <param name="allEcsClusterResources">ECS Cluster resources that are required to be discovered</param>
+    private async Task FetchMissingEcsClusters(ICollection<EcsCluster> ecsClusters,
+        ICollection<AwsResource> allEcsClusterResources)
+    {
+        // If we inferred ECS clusters from CloudMap services, we need to fetch them
+        var missingEcsClusters = allEcsClusterResources
+            .Where(r => ecsClusters.All(c => c.ClusterArn != r.Arn))
+            .Select(r => r.Arn)
+            .ToList();
+
+        if (missingEcsClusters.Count > 0)
+        {
+            var missingEcsClustersData = await _ecsDiscovery.GetClusters(missingEcsClusters);
+            foreach (var missingEcsCluster in missingEcsClustersData)
+            {
+                ecsClusters.Add(missingEcsCluster);
+            }
+        }
     }
 
     /// <summary>

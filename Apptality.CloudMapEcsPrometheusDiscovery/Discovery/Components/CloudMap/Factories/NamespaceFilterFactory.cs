@@ -17,6 +17,7 @@ internal static class NamespaceFilterFactory
     {
         var namespaceNames = cloudMapNamespaceNames.Where(ns => !string.IsNullOrWhiteSpace(ns));
 
+        // TODO: Update the code to allow filtering based on ARNs as well as names
         return namespaceNames.Select(namespaceName => new NamespaceFilter
         {
             Condition = FilterCondition.EQ,
