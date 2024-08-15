@@ -124,7 +124,7 @@ public class DiscoveryTargetFactory : IDiscoveryTargetFactory
         builder.WithLabels(cloudMapServiceLabels);
 
         var cloudMapNamespaceLabels = BuildLabelsFromTags(
-            ecsCloudMapService.CloudMapNamespace.Tags,
+            ecsCloudMapService.CloudMapNamespace?.Tags ?? [],
             discoveryOptions.GetCloudMapNamespaceTagFilters(),
             DiscoveryLabelPriority.CloudMapNamespace
         );

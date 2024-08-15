@@ -7,5 +7,8 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
 /// </summary>
 public interface IDiscoveryService
 {
+    /// <summary>
+    /// Discovers ECS clusters and CloudMap namespaces and return the result
+    /// </summary>
     Task<DiscoveryResult> Discover();
 }

@@ -9,7 +9,7 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.CloudMap
 public class CloudMapService
 {
     public required string NamespaceId { get; init; }
-    public CloudMapNamespace CloudMapNamespace { get; set; }
+    public CloudMapNamespace? CloudMapNamespace { get; set; }
     public required ServiceSummary ServiceSummary { get; init; }
     public ResourceTag[] Tags { get; set; } = [];
     public ICollection<CloudMapServiceInstance> InstanceSummaries { get; set; } = [];

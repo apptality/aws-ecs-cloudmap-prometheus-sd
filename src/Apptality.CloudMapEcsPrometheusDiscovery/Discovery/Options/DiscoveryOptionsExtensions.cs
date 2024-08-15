@@ -19,12 +19,28 @@ public static class DiscoveryOptionsExtensions
     }
 
     /// <summary>
+    /// Returns true if the "EcsClusters" parameter is not empty
+    /// </summary>
+    public static bool HasEcsClusters(this DiscoveryOptions discoveryOptions)
+    {
+        return !string.IsNullOrWhiteSpace(discoveryOptions.EcsClusters);
+    }
+
+    /// <summary>
     /// Parses "CloudMapNamespaces" parameter from the DiscoveryOptions and returns an array of CloudMap namespaces
     /// </summary>
     public static string[] GetCloudMapNamespaceNames(this DiscoveryOptions discoveryOptions)
     {
         // Resolve namespace names from configuration
         return CommaSeparatedStringToArray(discoveryOptions.CloudMapNamespaces);
+    }
+
+    /// <summary>
+    /// Returns true if the "CloudMapNamespaces" parameter is not empty
+    /// </summary>
+    public static bool HasCloudMapNamespaces(this DiscoveryOptions discoveryOptions)
+    {
+        return !string.IsNullOrWhiteSpace(discoveryOptions.CloudMapNamespaces);
     }
 
     /// <summary>

@@ -4,7 +4,7 @@ using Serilog;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Prometheus;
 
-public static class PrometheusTargetsResponseFactory
+public static class PrometheusResponseFactory
 {
     /// <summary>
     /// Method takes in a collection of discovery targets and returns an array of objects,
@@ -17,9 +17,9 @@ public static class PrometheusTargetsResponseFactory
     /// Read more at <a href="https://prometheus.io/docs/prometheus/latest/http_sd/#http_sd-format">Prometheus Documentation</a>
     /// </remarks>
     /// <returns></returns>
-    public static PrometheusTargetsResponse Create(ICollection<DiscoveryTarget> discoveryTargets)
+    public static PrometheusResponse Create(ICollection<DiscoveryTarget> discoveryTargets)
     {
-        var response = new PrometheusTargetsResponse();
+        var response = new PrometheusResponse();
 
         foreach (var discoveryTarget in discoveryTargets)
         {

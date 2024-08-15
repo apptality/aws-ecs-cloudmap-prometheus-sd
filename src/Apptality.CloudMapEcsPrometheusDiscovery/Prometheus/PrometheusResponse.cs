@@ -8,7 +8,7 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Prometheus;
 /// <remarks>
 /// Read more at <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config">prometheus.io</a>
 /// </remarks>
-public class PrometheusTargetsResponse : List<StaticConfigResponse>;
+public class PrometheusResponse : List<StaticConfigResponse>;
 
 /// <summary>
 /// Model representing a Prometheus HTTP service discovery static configuration entry

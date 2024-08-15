@@ -15,12 +15,15 @@ public class CloudMapServiceDiscovery(
     IAmazonServiceDiscovery serviceDiscoveryClient
 ) : ICloudMapServiceDiscovery
 {
-    /// <inheritdoc cref="ICloudMapServiceDiscovery.GetNamespaces"/>
+    /// <inheritdoc cref="ICloudMapServiceDiscovery.GetNamespacesByNames"/>
     /// <remarks>
     /// Read more about the ListNamespaces API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TListNamespacesRequest.html">here</a>
     /// </remarks>
-    public async Task<ICollection<CloudMapNamespace>> GetNamespaces(ICollection<string> namespaceNames)
+    public async Task<ICollection<CloudMapNamespace>> GetNamespacesByNames(ICollection<string> namespaceNames)
     {
+        // From namespaceNames filter out those that are ARNs
+        // var namespaceNamesArns = namespaceNames
+
         var namespaceFilters = NamespaceFilterFactory.Create(namespaceNames);
         var request = new ListNamespacesRequest {Filters = namespaceFilters};
         logger.LogDebug("Fetching data for the following namespaces: {@Namespaces}", request.Filters);
@@ -43,6 +46,36 @@ public class CloudMapServiceDiscovery(
         return namespaces.Select(ns => new CloudMapNamespace
         {
             NamespaceSummary = ns
+        }).ToList();
+    }
+
+    /// <inheritdoc cref="ICloudMapServiceDiscovery.GetNamespacesByIds"/>
+    /// <remarks>
+    /// Read more about the ListNamespaces API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ServiceDiscovery/TGetNamespaceRequest.html">here</a>
+    /// </remarks>
+    public async Task<ICollection<CloudMapNamespace>> GetNamespacesByIds(ICollection<string> namespaceIds)
+    {
+        var namespaceRequests = namespaceIds
+            .Where(ns => ns.StartsWith("ns-")) // Filter out anything that doesn't start with 'ns-'
+            .Select(nsId => serviceDiscoveryClient.GetNamespaceAsync(new GetNamespaceRequest {Id = nsId}));
+
+        // Wait for all requests to complete
+        var namespaces = await Task.WhenAll(namespaceRequests);
+
+        // Return the namespaces converted to CloudMapNamespace
+        return namespaces.Select(ns => new CloudMapNamespace
+        {
+            NamespaceSummary = new NamespaceSummary
+            {
+                Arn = ns.Namespace.Arn,
+                CreateDate = ns.Namespace.CreateDate,
+                Description = ns.Namespace.Description,
+                Id = ns.Namespace.Id,
+                Name = ns.Namespace.Name,
+                Properties = ns.Namespace.Properties,
+                ServiceCount = ns.Namespace.ServiceCount,
+                Type = ns.Namespace.Type
+            }
         }).ToList();
     }
 

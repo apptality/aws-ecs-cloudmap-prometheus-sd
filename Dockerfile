@@ -13,3 +13,11 @@ WORKDIR /app
 COPY --from=build-env /app/out .
 EXPOSE 9001
 ENTRYPOINT ["./CloudMapEcsPrometheusDiscovery"]
+
+# Usage:
+# docker build -t cloud-map-ecs-prometheus-discovery:latest .
+# docker run -p 9001:9001 cloud-map-ecs-prometheus-discovery:latest
+
+# Mac M1 Users:
+# docker build --platform linux/x86_64 -t cloud-map-ecs-prometheus-discovery:latest .
+# docker run --platform linux/x86_64 -p 9001:9001 cloud-map-ecs-prometheus-discovery:latest
