@@ -3,6 +3,9 @@
     <PropertyGroup>
         <RootNamespace>Apptality.CloudMapEcsPrometheusDiscovery</RootNamespace>
         <AssemblyName>CloudMapEcsPrometheusDiscovery</AssemblyName>
+        <PublishSingleFile>true</PublishSingleFile>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,6 +20,13 @@
         <PackageReference Include="Serilog.Sinks.Console"/>
         <PackageReference Include="System.Text.Json"/>
         <PackageReference Include="Scrutor"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="appsettings.json">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>
