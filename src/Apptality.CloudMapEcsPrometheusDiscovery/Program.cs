@@ -25,9 +25,15 @@ app.MapGet("/prometheus-targets", async (
     IDiscoveryTargetFactory discoveryTargetFactory
 ) =>
 {
+    // Discover infrastructure
     var discoveryResult = await discoveryService.Discover();
+
+    // Convert to Discovery targets hierarchy
     var discoveryTargets = discoveryTargetFactory.Create(discoveryResult);
+
+    // Create Prometheus response
     var response = PrometheusResponseFactory.Create(discoveryTargets);
+
     return Results.Ok(response);
 });
 
