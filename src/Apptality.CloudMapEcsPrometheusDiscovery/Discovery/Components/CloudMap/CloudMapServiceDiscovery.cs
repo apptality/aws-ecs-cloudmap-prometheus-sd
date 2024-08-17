@@ -59,11 +59,13 @@ public class CloudMapServiceDiscovery(
             .Where(ns => ns.StartsWith("ns-")) // Filter out anything that doesn't start with 'ns-'
             .Select(nsId => serviceDiscoveryClient.GetNamespaceAsync(new GetNamespaceRequest {Id = nsId}));
 
+        logger.LogDebug("Fetching data for the following namespaces: {@NamespaceIds}", namespaceIds);
+
         // Wait for all requests to complete
         var namespaces = await Task.WhenAll(namespaceRequests);
 
         // Return the namespaces converted to CloudMapNamespace
-        return namespaces.Select(ns => new CloudMapNamespace
+        var cloudMapNamespaces = namespaces.Select(ns => new CloudMapNamespace
         {
             NamespaceSummary = new NamespaceSummary
             {
@@ -77,6 +79,10 @@ public class CloudMapServiceDiscovery(
                 Type = ns.Namespace.Type
             }
         }).ToList();
+
+        logger.LogDebug("Fetched data for the following namespaces: {@Namespaces}", cloudMapNamespaces);
+
+        return cloudMapNamespaces;
     }
 
     /// <inheritdoc cref="ICloudMapServiceDiscovery.GetServices"/>
@@ -88,6 +94,8 @@ public class CloudMapServiceDiscovery(
         var serviceFilters = ServiceFilterFactory.Create(namespaceId);
         var request = new ListServicesRequest {Filters = serviceFilters};
 
+        logger.LogDebug("Fetching services for namespace: {NamespaceId}", namespaceId);
+
         // If no filters are provided, return null
         if (request.Filters.Count == 0) return [];
 
@@ -98,7 +106,7 @@ public class CloudMapServiceDiscovery(
             (requestContinuation, nextToken) => requestContinuation.NextToken = nextToken);
 
         // Merge all responses into a single response
-        return responses
+        var cloudMapServices = responses
             .SelectMany(response => response.Services)
             .Select(serviceSummary => new CloudMapService
             {
@@ -106,6 +114,11 @@ public class CloudMapServiceDiscovery(
                 ServiceSummary = serviceSummary
             })
             .ToList();
+
+        logger.LogDebug("Fetched services for namespace {NamespaceId}: {@CloudMapServices}", namespaceId,
+            cloudMapServices);
+
+        return cloudMapServices;
     }
 
     /// <inheritdoc cref="ICloudMapServiceDiscovery.GetServiceInstances"/>
@@ -119,6 +132,8 @@ public class CloudMapServiceDiscovery(
             throw new ArgumentException("Service ID cannot be null or empty", nameof(serviceId));
         }
 
+        logger.LogDebug("Fetching instances for service: {ServiceId}", serviceId);
+
         var request = new ListInstancesRequest {ServiceId = serviceId};
 
         var responses = await serviceDiscoveryClient.FetchAllPagesAsync(
@@ -128,7 +143,7 @@ public class CloudMapServiceDiscovery(
             (requestContinuation, nextToken) => requestContinuation.NextToken = nextToken);
 
         // Merge all responses into a single response
-        return responses
+        var serviceInstances = responses
             .SelectMany(response => response.Instances)
             .Select(instanceSummary => new CloudMapServiceInstance
             {
@@ -136,6 +151,10 @@ public class CloudMapServiceDiscovery(
                 InstanceSummary = instanceSummary
             })
             .ToList();
+
+        logger.LogDebug("Fetched instances for service {ServiceId}: {@ServiceInstances}", serviceId, serviceInstances);
+
+        return serviceInstances;
     }
 
     /// <inheritdoc cref="ICloudMapServiceDiscovery.GetTags"/>

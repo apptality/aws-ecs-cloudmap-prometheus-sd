@@ -227,27 +227,10 @@ public class EcsDiscovery(
             tasks.AddRange(ecsTasks);
         }
 
+        logger.LogDebug(
+            "Fetched ECS tasks for cluster {ClusterArn} and service {ServiceArn}: {@Tasks}",
+            clusterArn, serviceArn, tasks);
+
         return tasks;
-    }
-
-    /// <inheritdoc cref="IEcsDiscovery.DescribeTaskDefinition"/>
-    /// <remarks>
-    /// Read more about the DescribeTaskDefinition API operation <a href="https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ECS/TDescribeTaskDefinitionRequest.html">here</a>
-    /// </remarks>
-    public async Task<TaskDefinition> DescribeTaskDefinition(string taskDefinitionArn)
-    {
-        if (string.IsNullOrWhiteSpace(taskDefinitionArn))
-            throw new ArgumentException("Task definition ARN must be provided.", nameof(taskDefinitionArn));
-
-        var request = new DescribeTaskDefinitionRequest
-        {
-            Include = ["TAGS"],
-            TaskDefinition = taskDefinitionArn
-        };
-
-        var response =
-            await ecsClient.ExecuteWithRetryAsync(async () => await ecsClient.DescribeTaskDefinitionAsync(request));
-
-        return response.TaskDefinition;
     }
 }

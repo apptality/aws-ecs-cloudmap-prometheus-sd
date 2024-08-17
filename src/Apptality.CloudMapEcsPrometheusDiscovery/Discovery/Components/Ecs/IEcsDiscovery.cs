@@ -52,12 +52,4 @@ public interface IEcsDiscovery
     /// List of tasks definitions for the given cluster and tasks ARNs
     /// </returns>
     Task<ICollection<EcsTask>> DescribeTasks(string clusterArn, string serviceArn, string[] taskArns);
-
-    /// <summary>
-    /// Describes the ECS task definition for the given task definition ARN
-    /// </summary>
-    /// <returns>
-    /// Task definition for the given task definition ARN
-    /// </returns>
-    Task<TaskDefinition> DescribeTaskDefinition(string taskDefinitionArn);
 }

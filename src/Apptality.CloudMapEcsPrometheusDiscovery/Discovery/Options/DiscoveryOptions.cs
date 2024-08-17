@@ -106,6 +106,13 @@ public class DiscoveryOptions : IValidatableObject
     public ushort CacheTtlSeconds { get; set; } = 60;
 
     /// <summary>
+    /// When set to 'true', top-level resources (clusters, namespaces) will be cached.
+    /// This significantly reduces the number of requests to AWS, but may result in stale data.
+    /// Data is cached for 10 minutes.
+    /// </summary>
+    public bool CacheTopLevelResources { get; set; } = true;
+
+    /// <summary>
     /// Tag prefix to identify a metrics path, port, and name.
     /// Must be at least three characters long and end with an underscore.
     /// </summary>

@@ -25,9 +25,9 @@ public class CloudMapServiceInstance
     /// <remarks>
     /// Only applicable to ServiceDiscovery instances that are part of an ECS service.
     /// </remarks>
-    public string? EcsClusterName()
+    public string EcsClusterName()
     {
-        return InstanceSummary.Attributes.TryGetValue("ECS_CLUSTER_NAME", out var value) ? value : null;
+        return InstanceSummary.Attributes.TryGetValue("ECS_CLUSTER_NAME", out var value) ? value : string.Empty;
     }
 
     /// <summary>
@@ -36,8 +36,8 @@ public class CloudMapServiceInstance
     /// <remarks>
     /// Only applicable to ServiceDiscovery instances that are part of an ECS service.
     /// </remarks>
-    public string? EcsServiceName()
+    public string EcsServiceName()
     {
-        return InstanceSummary.Attributes.TryGetValue("ECS_SERVICE_NAME", out var value) ? value : null;
+        return InstanceSummary.Attributes.TryGetValue("ECS_SERVICE_NAME", out var value) ? value : string.Empty;
     }
 }

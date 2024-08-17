@@ -25,16 +25,25 @@ app.MapGet("/prometheus-targets", async (
     IDiscoveryTargetFactory discoveryTargetFactory
 ) =>
 {
-    // Discover infrastructure
-    var discoveryResult = await discoveryService.Discover();
+    try
+    {
+        // Discover infrastructure
+        var discoveryResult = await discoveryService.Discover();
 
-    // Convert to Discovery targets hierarchy
-    var discoveryTargets = discoveryTargetFactory.Create(discoveryResult);
+        // Convert to Discovery targets hierarchy
+        var discoveryTargets = discoveryTargetFactory.Create(discoveryResult);
 
-    // Create Prometheus response
-    var response = PrometheusResponseFactory.Create(discoveryTargets);
+        // Create Prometheus response
+        var response = PrometheusResponseFactory.Create(discoveryTargets);
 
-    return Results.Ok(response);
+        return Results.Ok(response);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Failed to discover infrastructure");
+        return Results.Problem("Failed to discover infrastructure. See logs for more details.",
+            statusCode: StatusCodes.Status500InternalServerError);
+    }
 });
 
 // Run Kestrel

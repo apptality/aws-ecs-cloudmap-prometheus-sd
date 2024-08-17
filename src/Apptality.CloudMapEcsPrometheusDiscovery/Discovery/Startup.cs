@@ -5,6 +5,7 @@ using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Factories;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services;
+using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Services.Internals;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery;
 
@@ -31,6 +32,8 @@ public static class Startup
     private static WebApplicationBuilder AddDiscoveryServices(this WebApplicationBuilder builder)
     {
         // Discovery services
+        builder.Services.AddScoped<ICloudMapDiscoveryService, CloudMapDiscoveryService>();
+        builder.Services.AddScoped<IEcsDiscoveryService, EcsDiscoveryService>();
         builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
         builder.Services.Decorate<IDiscoveryService, CachedDiscoveryService>();
         // Factories
