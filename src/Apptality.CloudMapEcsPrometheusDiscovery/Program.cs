@@ -5,7 +5,7 @@ using Apptality.CloudMapEcsPrometheusDiscovery.Infrastructure;
 using Apptality.CloudMapEcsPrometheusDiscovery.Prometheus;
 
 var app = WebApplication
-    .CreateBuilder(args)
+    .CreateSlimBuilder(args)
     // Add infrastructure services
     .AddInfrastructure()
     // Add discovery services

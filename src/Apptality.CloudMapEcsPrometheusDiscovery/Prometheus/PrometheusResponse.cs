@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Prometheus;
 
 /// <summary>
@@ -15,9 +13,6 @@ public class PrometheusResponse : List<StaticConfigResponse>;
 /// </summary>
 public class StaticConfigResponse
 {
-    [JsonPropertyName("targets")]
-    public List<string> Targets { get; set; } = [];
-
-    [JsonPropertyName("labels")]
-    public Dictionary<string,string> Labels { get; set; } = new();
+    public List<string> Targets { get; set; } = new();
+    public Dictionary<string, string> Labels { get; set; } = new();
 }

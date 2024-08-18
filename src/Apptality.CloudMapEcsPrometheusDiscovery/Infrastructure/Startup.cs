@@ -1,5 +1,5 @@
+using Apptality.CloudMapEcsPrometheusDiscovery.Prometheus;
 using Serilog;
-using Serilog.Events;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Infrastructure;
 
@@ -15,6 +15,9 @@ internal static class Startup
     {
         // Clear existing configurations sources to avoid unpredictable behavior
         builder.Configuration.Sources.Clear();
+
+        // Ensure that settings are loaded from the current directory
+        builder.Configuration.SetBasePath(Directory.GetCurrentDirectory());
 
         // Add appsettings.json
         builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -55,8 +58,6 @@ internal static class Startup
         // Configure static logger to log to console
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-            .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .WriteTo.Console()
             .CreateLogger();
@@ -93,6 +94,21 @@ internal static class Startup
     }
 
     /// <summary>
+    /// Adds response JSON source generator serializers to the WebApplicationBuilder
+    /// </summary>
+    /// <remarks>
+    /// You can read more <a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/source-generation?pivots=dotnet-8-0">here</a>
+    /// </remarks>
+    private static WebApplicationBuilder AddResponseSerializers(this WebApplicationBuilder builder)
+    {
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.TypeInfoResolverChain.Insert(0, PrometheusResponseSerializerContext.Default);
+        });
+        return builder;
+    }
+
+    /// <summary>
     /// Adds all infrastructure configurations to the application
     /// </summary>
     internal static WebApplicationBuilder AddInfrastructure(this WebApplicationBuilder builder)
@@ -102,7 +118,8 @@ internal static class Startup
             .AddConfiguration()
             .AddLogging()
             .AddHealthChecks()
-            .AddCaching();
+            .AddCaching()
+            .AddResponseSerializers();
     }
 
     /// <summary>

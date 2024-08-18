@@ -5,7 +5,7 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 /// <summary>
 /// Class for configuring service discovery options
 /// </summary>
-public class DiscoveryOptions : IValidatableObject
+public sealed class DiscoveryOptions
 {
     /// <summary>
     /// Semicolon separated string containing ECS clusters names to query for services.
@@ -13,14 +13,14 @@ public class DiscoveryOptions : IValidatableObject
     /// <remarks>
     /// At least one of "EcsClusters" or "CloudMapNamespaces" must be provided.
     /// </remarks>
-    public string EcsClusters { get; init; } = string.Empty;
+    public string EcsClusters { get; set; } = string.Empty;
 
     /// <summary>
     /// Semicolon separated string of tag key-value pairs to select ECS services.
     /// If selector is not provided, all services in the cluster are included.
     /// Example: "service_discovery=true;component=app"
     /// </summary>
-    public string EcsServiceSelectorTags { get; init; } = string.Empty;
+    public string EcsServiceSelectorTags { get; set; } = string.Empty;
 
     /// <summary>
     /// Semicolon separated string containing Cloud Map namespaces names to query for services.
@@ -31,7 +31,7 @@ public class DiscoveryOptions : IValidatableObject
     /// <remarks>
     /// At least one of "EcsClusters" or "CloudMapNamespaces" must be provided.
     /// </remarks>
-    public string CloudMapNamespaces { get; init; } = string.Empty;
+    public string CloudMapNamespaces { get; set; } = string.Empty;
 
     /// <summary>
     /// Semicolon separated string of tag key-value pairs to select CloudMap services.
@@ -43,7 +43,7 @@ public class DiscoveryOptions : IValidatableObject
     /// Read more at <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html">service-connect</a> docs.
     /// Read more at <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html">service-discovery</a> docs.
     /// </remarks>
-    public string CloudMapServiceSelectorTags { get; init; } = string.Empty;
+    public string CloudMapServiceSelectorTags { get; set; } = string.Empty;
 
     // Tags are resolved with the following priority:
     // 1) ECS Task
@@ -114,7 +114,7 @@ public class DiscoveryOptions : IValidatableObject
 
     /// <summary>
     /// Tag prefix to identify a metrics path, port, and name.
-    /// Must be at least three characters long and end with an underscore.
+    /// Must be at least three characters long, start with a letter, and end with an underscore.
     /// </summary>
     /// <remarks>
     /// This prefix has a special meaning and is used to identify the metrics path and port
@@ -152,39 +152,11 @@ public class DiscoveryOptions : IValidatableObject
     /// <br />
     /// If a name is not provided, the service name will be omitted from labels.
     /// <br />
-    /// Here is an example of regex to match the tags: ^METRICS_(PATH|PORT|NAME)\w+$
+    /// Here is an example that will be used to
+    /// match the tags if 'METRICS_' is used as a prefix:
+    /// ^METRICS_(PATH|PORT|NAME){1}[_]?\w*$
     /// </remarks>
-    [MinLength(3)]
+    [Required]
+    [RegularExpression(@"^[a-zA-Z]{1}[\w-]+[_]{1}$")]
     public string MetricsPathPortTagPrefix { get; set; } = "METRICS_";
-
-    /// <summary>
-    /// Validates the discovery options
-    /// </summary>
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // Keep track of validation results
-        var validationResults = new List<ValidationResult>();
-
-        // Ensure at least one Cloud Map namespace or ECS cluster is provided
-        var ecsClusters = this.GetEcsClustersNames();
-        var cloudMapNamespaces = this.GetCloudMapNamespaceNames();
-
-        // If both are empty, add a validation error
-        if (ecsClusters.Length == 0 && cloudMapNamespaces.Length == 0)
-        {
-            validationResults.Add(new ValidationResult(
-                "At least one of 'EcsClusters' or 'CloudMapNamespaces' name must be specified.",
-                new[] {nameof(EcsClusters), nameof(CloudMapNamespaces)}));
-        }
-
-        // Ensure that MetricsPathPortTagPrefix ends with an underscore
-        if (!MetricsPathPortTagPrefix.EndsWith("_"))
-        {
-            validationResults.Add(new ValidationResult(
-                "MetricsPathPortTagPrefix must end with an underscore.",
-                new[] {nameof(MetricsPathPortTagPrefix)}));
-        }
-
-        return validationResults;
-    }
 }

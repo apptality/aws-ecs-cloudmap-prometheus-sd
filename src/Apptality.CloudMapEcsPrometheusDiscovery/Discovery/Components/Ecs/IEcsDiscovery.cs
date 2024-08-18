@@ -1,4 +1,3 @@
-using Amazon.ECS.Model;
 using Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs.Models;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Components.Ecs;

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Options;
 
 /// <summary>
@@ -10,10 +12,12 @@ public static class Startup
         builder.Services
             // Add discovery options to the configuration
             .AddOptions<DiscoveryOptions>()
-            .BindConfiguration(nameof(DiscoveryOptions))
-            // Ensure configurations are validated on start
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+            .BindConfiguration(nameof(DiscoveryOptions));
+
+        builder.Services
+            // Add validators for the discovery options
+            .AddSingleton<IValidateOptions<DiscoveryOptions>, DiscoveryOptionsValidator>()
+            .AddSingleton<IValidateOptions<DiscoveryOptions>, DiscoveryOptionsCustomValidator>();
 
         return builder;
     }

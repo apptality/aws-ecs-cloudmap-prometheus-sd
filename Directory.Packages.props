@@ -6,6 +6,7 @@
         <PackageVersion Include="AWSSDK.ECS" Version="3.7.306.16"/>
         <PackageVersion Include="AWSSDK.ServiceDiscovery" Version="3.7.300.119"/>
         <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.301"/>
+        <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
         <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0"/>
         <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0"/>
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0"/>

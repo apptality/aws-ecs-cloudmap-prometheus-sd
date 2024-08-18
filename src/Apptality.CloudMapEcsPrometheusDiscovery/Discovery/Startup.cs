@@ -20,9 +20,12 @@ public static class Startup
     /// <see cref="https://aws.amazon.com/blogs/developer/configuring-aws-sdk-with-net-core/"/>
     private static WebApplicationBuilder AddAwsServices(this WebApplicationBuilder builder)
     {
+#pragma warning disable IL2026
+        // Below assemblies are excluded from trimming using configuration in .csproj
         builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
         builder.Services.AddAWSService<IAmazonECS>();
         builder.Services.AddAWSService<IAmazonServiceDiscovery>();
+#pragma warning restore IL2026
         return builder;
     }
 
