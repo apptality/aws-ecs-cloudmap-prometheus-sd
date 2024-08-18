@@ -16,6 +16,13 @@
         <DebugType>embedded</DebugType>
     </PropertyGroup>
 
+    <!-- Forcing the app output name to be consistent, 
+    to have same entrypoint on both linux and windows -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetName>CloudMapEcsPrometheusDiscovery</TargetName>
+    </PropertyGroup>
+
     <ItemGroup>
         <TrimmerRootAssembly Include="CloudMapEcsPrometheusDiscovery"/>
         <!-- Below are assemblies that don't play nicely with trimming -->

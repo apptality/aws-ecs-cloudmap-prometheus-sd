@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
 namespace Apptality.CloudMapEcsPrometheusDiscovery.Prometheus;
@@ -9,7 +10,7 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Prometheus;
 [JsonSerializable(typeof(List<StaticConfigResponse>))]
 [JsonSerializable(typeof(StaticConfigResponse))]
 [JsonSerializable(typeof(PrometheusResponse))]
-[JsonSerializable(typeof(Microsoft.AspNetCore.Mvc.ProblemDetails))]
+[JsonSerializable(typeof(ProblemDetails))]
 internal partial class PrometheusResponseSerializerContext : JsonSerializerContext
 {
 }

@@ -13,6 +13,6 @@ public class PrometheusResponse : List<StaticConfigResponse>;
 /// </summary>
 public class StaticConfigResponse
 {
-    public List<string> Targets { get; set; } = new();
+    public List<string> Targets { get; set; } = [];
     public Dictionary<string, string> Labels { get; set; } = new();
 }

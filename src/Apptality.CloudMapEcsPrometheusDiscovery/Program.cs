@@ -41,8 +41,10 @@ app.MapGet("/prometheus-targets", async (
     catch (Exception ex)
     {
         logger.LogError(ex, "Failed to discover infrastructure");
-        return Results.Problem("Failed to discover infrastructure. See logs for more details.",
-            statusCode: StatusCodes.Status500InternalServerError);
+        return Results.Problem(
+            $"Failed to discover infrastructure. See logs for more details. Error: {ex.Message}",
+            statusCode: StatusCodes.Status500InternalServerError
+        );
     }
 });
 
