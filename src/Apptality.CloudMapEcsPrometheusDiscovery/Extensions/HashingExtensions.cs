@@ -9,9 +9,6 @@ public static class HashingExtensions
     /// Based on the provided values, computes a SHA256 hash.
     /// If the collection is null or empty, returns "empty"
     /// </summary>
-    /// <param name="values">
-    /// </param>
-    /// <returns></returns>
     public static string ComputeHash(this ICollection<string>? values)
     {
         // If collection is empty or null - short circuit

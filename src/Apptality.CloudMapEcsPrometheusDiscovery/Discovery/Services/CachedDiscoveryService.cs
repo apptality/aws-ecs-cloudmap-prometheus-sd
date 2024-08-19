@@ -36,9 +36,9 @@ public class CachedDiscoveryService : IDiscoveryService
         var cacheKey = "discovery-service-cache-key";
         if (_cache.TryGetValue<DiscoveryResult>(cacheKey, out var discoveryResult))
         {
-            _logger.LogDebug("Returning cached discovery result");
             if (discoveryResult != null)
             {
+                _logger.LogDebug("Returning cached discovery result");
                 return discoveryResult;
             }
         }

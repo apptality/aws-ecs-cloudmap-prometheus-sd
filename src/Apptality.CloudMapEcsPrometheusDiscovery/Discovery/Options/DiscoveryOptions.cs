@@ -17,8 +17,21 @@ public sealed class DiscoveryOptions
 
     /// <summary>
     /// Semicolon separated string of tag key-value pairs to select ECS services.
-    /// If selector is not provided, all services in the cluster are included.
-    /// Example: "service_discovery=true;component=app"
+    /// If a selector is provided, service must match all tags in the selector.
+    /// If selector is not provided, all services in the clusters are included.
+    /// Tag value selector supports wildcard symbol: *.
+    /// Tags key/value matching is case-sensitive.
+    /// <br/>
+    /// Example:
+    ///    Given the following selector: "service_discovery=true;component=app;other_tag=*;"
+    ///    All services with the tag "service_discovery" set to "true"
+    ///    and "component" set to "app"
+    ///    and "other_tag" set to any value will be included.
+    /// <br/>
+    /// IMPORTANT:
+    ///    1. It is your responsibility to ensure that all tags are present on the resource
+    ///    2. If you specify 'CloudMapServiceSelectorTags' - it is your responsibility to ensure
+    ///       that ecs services and corresponding cloud map services are both included via selectors specified.
     /// </summary>
     public string EcsServiceSelectorTags { get; set; } = string.Empty;
 
@@ -84,11 +97,18 @@ public sealed class DiscoveryOptions
     public string CloudMapNamespaceTags { get; set; } = string.Empty;
 
     /// <summary>
-    /// Semicolon separated string of static labels to include in the
-    /// service discovery response as metadata.
+    /// Semicolon separated string of labels to include in the service discovery response as metadata.
+    /// Will be added to all discovered targets.
     /// </summary>
     /// <remarks>
-    /// Once parsed, provided labels and values will be added to all targets metadata
+    /// For example, "environment=dev;region=us-west-2"
+    /// If value needs to have a semicolon, or equals sign, it must be prefixed using %.
+    /// For example, "eval_expression=a%=%=b;components=a%;b%;;"
+    /// would be parsed as "eval_expression=a==b;components=a;b;"
+    /// Any label that is not a valid Prometheus label will be transformed to such.
+    /// Read more: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#labelname
+    /// Example:
+    ///    "static_key_1=static_value_1;static_key_2=static_value_2;"
     /// </remarks>
     public string ExtraPrometheusLabels { get; set; } = string.Empty;
 
@@ -113,20 +133,24 @@ public sealed class DiscoveryOptions
     public bool CacheTopLevelResources { get; set; } = true;
 
     /// <summary>
-    /// Tag prefix to identify a metrics path, port, and name.
+    /// Tag prefix to identify metrics port, [path | "/metrics"], [name | ""] triplets.
     /// Must be at least three characters long, start with a letter, and end with an underscore.
     /// </summary>
     /// <remarks>
-    /// This prefix has a special meaning and is used to identify the metrics path and port
-    /// for the service. PATH, PORT, NAME will be appended to the prefix to identify
-    /// metrics path, port, and container names respectively.
+    /// This prefix has a special meaning and is used to identify the metrics path, port, and name
+    /// for the service scrape configuration (in a single ecs service you may have multiple
+    /// containers listening on different ports, possibly having a different path you need to scrape from).
     /// <para>
+    /// 'PATH', 'PORT', 'NAME' will be appended to the prefix to identify
+    /// metrics path, port, and scrape configuration names respectively.
     /// If your service contains multiple metrics paths
     /// or ports, you can tag your resources using the following format:
     /// <ul>
     /// <li>METRICS_PATH_1 = /metrics</li>
     /// <li>METRICS_PORT_1 = 9001</li>
     /// <li>METRICS_NAME_1 = application</li>
+    /// </ul>
+    /// <ul>
     /// <li>METRICS_PATH_2 = /metrics2</li>
     /// <li>METRICS_PORT_2 = 9002</li>
     /// <li>METRICS_NAME_2 = sidecar</li>
@@ -150,11 +174,21 @@ public sealed class DiscoveryOptions
     /// </para>
     /// If a path is not provided, default path "/metrics" will be used.
     /// <br />
-    /// If a name is not provided, the service name will be omitted from labels.
+    /// If a name is not provided, the service name will be omitted from labels ('scrape_cfg_name' label).
     /// <br />
-    /// Here is an example that will be used to
-    /// match the tags if 'METRICS_' is used as a prefix:
-    /// ^METRICS_(PATH|PORT|NAME){1}[_]?\w*$
+    /// This directly affects the Prometheus http sd scrape configuration:
+    /// <code>
+    /// [{
+    ///    "targets": [
+    ///      "10.200.10.200:${METRICS_PORT}"
+    ///    ],
+    ///    "labels": {
+    ///      "__metrics_path__": "${METRICS_PATH}",
+    ///      "scrape_cfg_name": "${METRICS_NAME}",
+    ///      ...
+    ///     }
+    /// }]
+    /// </code>
     /// </remarks>
     [Required]
     [RegularExpression(@"^[a-zA-Z]{1}[\w-]+[_]{1}$")]

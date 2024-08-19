@@ -6,8 +6,9 @@ namespace Apptality.CloudMapEcsPrometheusDiscovery.Discovery.Models;
 public enum DiscoveryLabelPriority
 {
     /// <summary>
-    /// Labels inferred from tags resolved from the AWS CloudMap Service are of the highest priority,
-    /// and will take precedence over other tags resolved from parent services/"container" resources.
+    /// Labels inferred from tags resolved from the ECS Tasks are of the highest priority,
+    /// and will take precedence over other tags resolved from parent service, CloudMap service,
+    /// or any other priority with higher value.
     /// </summary>
     EcsTask = 10,
 

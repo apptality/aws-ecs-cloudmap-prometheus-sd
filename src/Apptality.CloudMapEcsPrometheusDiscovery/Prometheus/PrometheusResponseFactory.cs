@@ -8,7 +8,7 @@ public static class PrometheusResponseFactory
 {
     /// <summary>
     /// Method takes in a collection of discovery targets and returns an array of objects,
-    /// swhich when returned as JSON, comply with the Prometheus HTTP_SD format
+    /// which when returned as JSON, comply with the Prometheus HTTP_SD format
     /// </summary>
     /// <param name="discoveryTargets">
     /// Collection of pre-built discovery targets
@@ -16,7 +16,6 @@ public static class PrometheusResponseFactory
     /// <remarks>
     /// Read more at <a href="https://prometheus.io/docs/prometheus/latest/http_sd/#http_sd-format">Prometheus Documentation</a>
     /// </remarks>
-    /// <returns></returns>
     public static PrometheusResponse Create(ICollection<DiscoveryTarget> discoveryTargets)
     {
         var response = new PrometheusResponse();
