@@ -40,7 +40,6 @@ jobs:
           DOCKER_IMAGE_TAG=${{ steps.gitversion.outputs.fullSemVer }}
           DOCKER_IMAGE="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
           echo "Building and pushing ${DOCKER_IMAGE}"
-          docker buildx build --platform linux/amd64,linux/arm64 -t $DOCKER_IMAGE .
-          docker push $DOCKER_IMAGE
+          docker buildx build --file Dockerfile --platform linux/amd64,linux/arm64 --tag $DOCKER_IMAGE --push .
           # docker tag $IMAGE_NAME:$DOCKER_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$DOCKER_IMAGE
           # docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$DOCKER_IMAGE
