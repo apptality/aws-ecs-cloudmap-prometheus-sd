@@ -1,5 +1,4 @@
 name: Build and Publish Docker Images
-
 on:
   push:
     branches:
@@ -9,7 +8,6 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
