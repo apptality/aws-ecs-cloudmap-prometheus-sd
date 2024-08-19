@@ -1,0 +1,50 @@
+// For details see https://aka.ms/devcontainer.json
+{
+  "name": "AWS ECS and CloudMap Prometheus Discovery",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces",
+  "shutdownAction": "stopCompose",
+  "features": {
+    "ghcr.io/devcontainers/features/aws-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "8.0.303"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "installDockerBuildx": true,
+      "installDockerComposeSwitch": true,
+      "version": "latest",
+      "dockerDashComposeVersion": "latest"
+    }
+  },
+  "forwardPorts": [9001],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "streetsidesoftware.code-spell-checker",
+        "Digimezzo.jetbrains-rider-new-ui-theme",
+        "PKief.material-icon-theme",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "containerEnv": {
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "DOTNET_USE_POLLING_FILE_WATCHER": "1",
+    "DOTNET_RUNNING_IN_CONTAINER": "true",
+    "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT": "false",
+    "NUGET_XMLDOC_MODE": "skip"
+  },
+  "remoteEnv": {
+    "HOST_PROJECT_PATH": "${localWorkspaceFolder}"
+  },
+  "postCreateCommand": "make bootstrap",
+  "remoteUser": "root"
+}

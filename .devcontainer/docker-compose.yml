@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspaces
+      # Save command history between runs
+      - bash-history:/commandhistory
+      # Improve build/restore performance
+      - nuget-cache:/workspaces/.nuget
+      # Pass Docker socket through to the container, so we can run Docker commands as if we were running them directly on the host
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - local-dev-network
+    # Overrides the default command so things don't shut down after the process ends.
+    command: sleep infinity
+    user: root
+
+volumes:
+  bash-history:
+  nuget-cache:
+
+networks:
+  local-dev-network:
+    external: false

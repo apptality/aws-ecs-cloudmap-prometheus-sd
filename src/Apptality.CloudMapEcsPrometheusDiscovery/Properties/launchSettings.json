@@ -1,4 +1,9 @@
 ﻿{
+  // This command is designed to be used when developing outside devcontainer.
+  // Typically, if you're developing inside devcontainer,
+  // you should not be needing to use this launch profile.
+  // Paste in your AWS credentials in the shell,
+  // then use 'make run' command instead from your terminal
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
     "http": {
@@ -8,9 +13,9 @@
       "applicationUrl": "http://localhost:9001",
       "launchUrl": "prometheus-targets",
       "environmentVariables": {
-        "AWS_ACCESS_KEY_ID": "",
-        "AWS_SECRET_ACCESS_KEY": "",
-        "AWS_SESSION_TOKEN": "",
+        "AWS_ACCESS_KEY_ID": "<YOUR_AWS_ACCESS_KEY_ID>",
+        "AWS_SECRET_ACCESS_KEY": "<YOUR_AWS_SECRET_ACCESS_KEY>",
+        "AWS_SESSION_TOKEN": "<YOUR_AWS_SESSION_TOKEN>",
         "AWS_REGION": "us-west-2"
       }
     }
