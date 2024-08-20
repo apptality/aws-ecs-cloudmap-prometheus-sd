@@ -1,4 +1,4 @@
-# AWS Ecs & CloudMap Prometheus Discovery - End-to-End Example
+# AWS ECS & CloudMap Prometheus Discovery - End-to-End Example
 
 TBD
 
