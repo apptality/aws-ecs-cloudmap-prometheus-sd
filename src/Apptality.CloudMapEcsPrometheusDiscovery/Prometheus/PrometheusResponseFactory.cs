@@ -29,8 +29,8 @@ public static class PrometheusResponseFactory
                     Targets = [$"{discoveryTarget.IpAddress}:{scrapeConfiguration.Port}"],
                     Labels = new Dictionary<string, string>
                     {
-                        {"__metrics_path__", scrapeConfiguration.MetricsPath},
-                        {"instance", discoveryTarget.IpAddress},
+                        { "__metrics_path__", scrapeConfiguration.MetricsPath },
+                        { "instance", discoveryTarget.IpAddress },
                     }
                 };
                 // Add scrape configuration specific labele, if provided
@@ -40,13 +40,13 @@ public static class PrometheusResponseFactory
                 }
 
                 // Add ECS specific labels
-                staticConfig.Labels.Add("ecs_cluster", discoveryTarget.EcsCluster);
-                staticConfig.Labels.Add("ecs_service", discoveryTarget.EcsService);
-                staticConfig.Labels.Add("ecs_task", discoveryTarget.EcsTaskArn);
-                staticConfig.Labels.Add("ecs_task_definition_arn", discoveryTarget.EcsTaskDefinitionArn);
+                staticConfig.Labels.AddLabelWithValue("ecs_cluster", discoveryTarget.EcsCluster, true);
+                staticConfig.Labels.AddLabelWithValue("ecs_service", discoveryTarget.EcsService, true);
+                staticConfig.Labels.AddLabelWithValue("ecs_task", discoveryTarget.EcsTaskArn);
+                staticConfig.Labels.AddLabelWithValue("ecs_task_definition_arn", discoveryTarget.EcsTaskDefinitionArn);
 
                 // Add optional CloudMap labels, when not empty
-                staticConfig.Labels.AddLabelWithValue("cloudmap_service_name", discoveryTarget.CloudMapServiceName);
+                staticConfig.Labels.AddLabelWithValue("cloudmap_service_name", discoveryTarget.CloudMapServiceName, true);
                 staticConfig.Labels.AddLabelWithValue("cloudmap_service_instance_id", discoveryTarget.CloudMapServiceInstanceId);
                 staticConfig.Labels.AddLabelWithValue("cloudmap_service_type", discoveryTarget.ServiceType?.ToString() ?? "");
 
@@ -66,14 +66,24 @@ public static class PrometheusResponseFactory
     /// <summary>
     /// Adds a label to the dictionary if the value is not null or empty
     /// </summary>
-    internal static void AddLabelWithValue(this Dictionary<string, string> labels, string labelName, string labelValue)
+    internal static void AddLabelWithValue(
+        this Dictionary<string, string> labels,
+        string labelName,
+        string labelValue,
+        bool isMetaLabel = false
+    )
     {
         if (string.IsNullOrWhiteSpace(labelValue)) return;
+
         var validLabelName = labelName.ToValidPrometheusLabelName();
-        if (!labels.TryAdd(validLabelName, labelValue))
+        if (labels.TryAdd(validLabelName, labelValue) && isMetaLabel)
         {
-            Log.Debug("Failed to add label {LabelName} with value {LabelValue}", validLabelName, labelValue);
+            // Add meta-label if it was added successfully
+            labels.TryAdd($"__meta_{validLabelName}", labelValue);
+            return;
         }
+
+        Log.Debug("Failed to add label {LabelName} with value {LabelValue}", validLabelName, labelValue);
     }
 
     /// <summary>

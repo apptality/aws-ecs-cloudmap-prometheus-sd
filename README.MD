@@ -37,6 +37,7 @@ Below is a high level overview of what application is capable of. For the full l
 * **Scalable and Flexible**: Built to be scalable and flexible, adapting to changes in the service infrastructure
   * Allows having any number of port-metrics pairs per each running ECS Task (useful when your ECS Task Definition defines multiple containers, which also expose ports and metrics endpoint). See `MetricsPathPortTagPrefix` configuration property for more details.
   * Allows supplying static set of labels to be added to every Prometheus target (see `ExtraPrometheusLabels` configuration property)
+  * Exposes health check endpoint: `/health`
 
 Only one of `EcsClusters` or `CloudMapNamespaces` can be provided for application to work. If you would like to include both [Service Connect](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html) and [Service Discovery](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html) targets, `CloudMapNamespaces` must be supplied (with or without `EcsClusters`). When **both parameters** are supplied, the end result is only an intersection of targets that exist in ECS clusters supplied and CloudMap namespaces provided.
 
