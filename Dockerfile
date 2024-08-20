@@ -3,7 +3,7 @@
 
 # Linux (default)
 ARG BUILD_IMAGE_BASE=mcr.microsoft.com/dotnet/sdk:8.0-alpine
-ARG RUNTIME_IMAGE_BASE=mcr.microsoft.com/dotnet/runtime-deps:8.0-alpine
+ARG RUNTIME_IMAGE_BASE=mcr.microsoft.com/dotnet/runtime:8.0-alpine
 # Windows (built out of CI/CD)
 # ARG BUILD_IMAGE=mcr.microsoft.com/dotnet/sdk:8.0-nanoserver-ltsc2022
 # ARG RUNTIME_IMAGE=mcr.microsoft.com/dotnet/runtime:8.0-nanoserver-ltsc2022
@@ -19,15 +19,14 @@ WORKDIR /app
 COPY . ./
 RUN dotnet restore -a $TARGETARCH ./src/$PROJECT_NAME/$PROJECT_NAME.csproj
 RUN dotnet publish -a $TARGETARCH \
+     --no-restore \
      --self-contained true \
      -c Release \
      -o out \
     ./src/$PROJECT_NAME/$PROJECT_NAME.csproj
 
 # Build the runtime image
-FROM --platform=$BUILDPLATFORM ${RUNTIME_IMAGE_BASE}
-ARG TARGETARCH
-ARG BUILDPLATFORM
+FROM ${RUNTIME_IMAGE_BASE}
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_RUNNING_IN_CONTAINER=true \

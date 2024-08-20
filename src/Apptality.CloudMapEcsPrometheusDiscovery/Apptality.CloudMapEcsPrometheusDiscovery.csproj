@@ -6,7 +6,7 @@
         <!-- Below settings drastically reduce app size, while improving startup speed -->
         <PublishTrimmed>true</PublishTrimmed>
         <TrimMode>partial</TrimMode>
-        <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+        <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
         <PublishSingleFile>true</PublishSingleFile>
         <PublishReadyToRun>true</PublishReadyToRun>
         <!-- This reduces memory consumption -->
