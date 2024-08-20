@@ -1,9 +1,9 @@
 # AWS ECS & CloudMap Prometheus Discovery
 
 [![Build and Publish Docker Images](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml/badge.svg?branch=dev)](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml)
-[![License: MIT](https://cdn.prod.website-files.com/5e0f1144930a8bc8aace526c/65dd9eb5aaca434fac4f1c34_License-MIT-blue.svg)](/LICENSE)
-![Docker Image Version](https://img.shields.io/docker/v/apptality/aws-ecs-cloudmap-prometheus-discovery?logo=docker)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/apptality/aws-ecs-cloudmap-prometheus-discovery/0.1.0-alpha.30?logo=docker)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue)](/LICENSE)
+[![Docker Image Version](https://img.shields.io/docker/v/apptality/aws-ecs-cloudmap-prometheus-discovery?logo=docker&label=Latest%20Version)](https://hub.docker.com/repository/docker/apptality/aws-ecs-cloudmap-prometheus-discovery)
+[![Docker Image Size (tag)](https://img.shields.io/docker/image-size/apptality/aws-ecs-cloudmap-prometheus-discovery/0.1.0-alpha.30?logo=docker&label=Image%20Size)](https://hub.docker.com/repository/docker/apptality/aws-ecs-cloudmap-prometheus-discovery/tags)
 
 
 🚧 🚧 🚧 This repo is still work in progress and is subject to change.
