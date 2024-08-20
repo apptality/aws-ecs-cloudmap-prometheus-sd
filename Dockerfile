@@ -34,12 +34,19 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_USE_POLLING_FILE_WATCHER=0 \
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
+# create a new user and change directory ownership
+RUN adduser --disabled-password \
+  --home /app \
+  --gecos '' dotnetuser && chown -R dotnetuser /app
+
+USER dotnetuser
 WORKDIR /app
+
 # Only 2 files are needed to run the app: the binary and the appsettings.json
 COPY --from=build /app/out/CloudMapEcsPrometheusDiscovery* .
 COPY --from=build /app/out/appsettings.json .
 # Should be enough to prevent port conflicts
-EXPOSE 7000-9999
+EXPOSE 9001
 ENTRYPOINT ["./CloudMapEcsPrometheusDiscovery"]
 
 # Usage:
