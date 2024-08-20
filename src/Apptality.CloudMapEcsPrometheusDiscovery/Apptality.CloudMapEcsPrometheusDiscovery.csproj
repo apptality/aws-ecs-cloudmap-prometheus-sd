@@ -5,7 +5,7 @@
         <AssemblyName>CloudMapEcsPrometheusDiscovery</AssemblyName>
         <!-- Below settings drastically reduce app size, while improving startup speed -->
         <PublishTrimmed>true</PublishTrimmed>
-        <TrimMode>full</TrimMode>
+        <TrimMode>partial</TrimMode>
         <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
         <PublishSingleFile>true</PublishSingleFile>
         <PublishReadyToRun>true</PublishReadyToRun>
@@ -26,10 +26,10 @@
     <ItemGroup>
         <TrimmerRootAssembly Include="CloudMapEcsPrometheusDiscovery"/>
         <!-- Below are assemblies that don't play nicely with trimming -->
-        <TrimmerRootAssembly Include="AWSSDK.ECS"/>
-        <TrimmerRootAssembly Include="AWSSDK.Extensions.NETCore.Setup"/>
-        <TrimmerRootAssembly Include="AWSSDK.ServiceDiscovery"/>
-        <TrimmerRootAssembly Include="Scrutor"/>
+<!--        <TrimmerRootAssembly Include="AWSSDK.ECS"/>-->
+<!--        <TrimmerRootAssembly Include="AWSSDK.Extensions.NETCore.Setup"/>-->
+<!--        <TrimmerRootAssembly Include="AWSSDK.ServiceDiscovery"/>-->
+<!--        <TrimmerRootAssembly Include="Scrutor"/>-->
     </ItemGroup>
 
     <ItemGroup>
