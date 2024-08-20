@@ -177,12 +177,9 @@ public static class DiscoveryOptionsExtensions
 
         value = value.Replace(equalSignSourceToken, equalSignReplacementToken);
         var parts = value.Split('=');
-        var key = parts[0];
-        var val = parts.Length > 1 ? parts[1] : null;
-        if (val != null)
-        {
-            val = val.Replace(equalSignReplacementToken, "=");
-        }
+        var key = parts[0].Trim();
+        var val = parts.Length > 1 ? parts[1].Trim() : null;
+        val = val?.Replace(equalSignReplacementToken, "=");
 
         return new Tuple<string, string?>(key, val);
     }
@@ -207,6 +204,7 @@ public static class DiscoveryOptionsExtensions
         return value.Split(';')
             .Where(c => !string.IsNullOrWhiteSpace(c))
             .Select(c => c.Replace(semicolonReplacementToken, ";"))
+            .Select(c => c.Trim())
             .ToArray();
     }
 }

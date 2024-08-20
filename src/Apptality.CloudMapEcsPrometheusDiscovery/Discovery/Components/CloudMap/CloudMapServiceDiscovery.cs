@@ -25,23 +25,31 @@ public class CloudMapServiceDiscovery(
         // var namespaceNamesArns = namespaceNames
 
         var namespaceFilters = NamespaceFilterFactory.Create(namespaceNames);
-        var request = new ListNamespacesRequest {Filters = namespaceFilters};
-        logger.LogDebug("Fetching data for the following namespaces: {@Namespaces}", request.Filters);
-
         // If no filters are provided, return null
-        if (request.Filters.Count == 0) return [];
+        if (namespaceFilters.Count == 0) return [];
 
-        // Fetch details on all namespaces specified in the filters
-        var responses = await serviceDiscoveryClient.FetchAllPagesAsync(
-            request,
-            async req => await serviceDiscoveryClient.ListNamespacesAsync(req),
-            response => response.NextToken,
-            (requestContinuation, nextToken) => requestContinuation.NextToken = nextToken
-        );
+        var namespaces = new List<NamespaceSummary>();
 
-        // Merge all responses into a single response
-        var namespaces = responses.SelectMany(response => response.Namespaces).ToList();
-        logger.LogDebug("Fetched data for the following namespaces: {@Namespaces}", namespaces);
+        // Iterate over all namespace filters and fetch data for each.
+        // This is also a pretty slow operation
+        foreach (var namespaceFilter in namespaceFilters)
+        {
+            var request = new ListNamespacesRequest { Filters = [namespaceFilter] };
+            logger.LogDebug("Fetching data for the following namespaces: {@Namespaces}", request.Filters);
+
+            // Fetch details on all namespaces specified in the filters
+            var responses = await serviceDiscoveryClient.FetchAllPagesAsync(
+                request,
+                async req => await serviceDiscoveryClient.ListNamespacesAsync(req),
+                response => response.NextToken,
+                (requestContinuation, nextToken) => requestContinuation.NextToken = nextToken
+            );
+
+            // Merge all responses into a single response
+            var requestedNamespaces = responses.SelectMany(response => response.Namespaces).ToList();
+            namespaces.AddRange(requestedNamespaces);
+            logger.LogDebug("Fetched data for the following namespace {Namespaces}: {@Namespaces}", namespaceFilter.Values.First(), requestedNamespaces);
+        }
 
         return namespaces.Select(ns => new CloudMapNamespace
         {
@@ -57,7 +65,7 @@ public class CloudMapServiceDiscovery(
     {
         var namespaceRequests = namespaceIds
             .Where(ns => ns.StartsWith("ns-")) // Filter out anything that doesn't start with 'ns-'
-            .Select(nsId => serviceDiscoveryClient.GetNamespaceAsync(new GetNamespaceRequest {Id = nsId}));
+            .Select(nsId => serviceDiscoveryClient.GetNamespaceAsync(new GetNamespaceRequest { Id = nsId }));
 
         logger.LogDebug("Fetching data for the following namespaces: {@NamespaceIds}", namespaceIds);
 
@@ -92,7 +100,7 @@ public class CloudMapServiceDiscovery(
     public async Task<ICollection<CloudMapService>> GetServices(string namespaceId)
     {
         var serviceFilters = ServiceFilterFactory.Create(namespaceId);
-        var request = new ListServicesRequest {Filters = serviceFilters};
+        var request = new ListServicesRequest { Filters = serviceFilters };
 
         logger.LogDebug("Fetching services for namespace: {NamespaceId}", namespaceId);
 
@@ -134,7 +142,7 @@ public class CloudMapServiceDiscovery(
 
         logger.LogDebug("Fetching instances for service: {ServiceId}", serviceId);
 
-        var request = new ListInstancesRequest {ServiceId = serviceId};
+        var request = new ListInstancesRequest { ServiceId = serviceId };
 
         var responses = await serviceDiscoveryClient.FetchAllPagesAsync(
             request,
@@ -168,7 +176,7 @@ public class CloudMapServiceDiscovery(
             throw new ArgumentException("Resource ARN cannot be null or empty", nameof(resourceArn));
         }
 
-        var request = new ListTagsForResourceRequest {ResourceARN = resourceArn};
+        var request = new ListTagsForResourceRequest { ResourceARN = resourceArn };
         ListTagsForResourceResponse response;
 
         try
@@ -182,7 +190,7 @@ public class CloudMapServiceDiscovery(
         }
 
         return new CloudMapResourceTags(resourceArn,
-            response.Tags.Select(t => new ResourceTag {Key = t.Key, Value = t.Value}).ToArray()
+            response.Tags.Select(t => new ResourceTag { Key = t.Key, Value = t.Value }).ToArray()
         );
     }
 }
