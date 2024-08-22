@@ -36,24 +36,20 @@ public static class PrometheusResponseFactory
                 // Add scrape configuration specific labele, if provided
                 if (!string.IsNullOrWhiteSpace(scrapeConfiguration.Name))
                 {
-                    staticConfig.Labels.Add("scrape_cfg_name", scrapeConfiguration.Name);
+                    staticConfig.Labels.Add("scrape_target_name", scrapeConfiguration.Name);
                 }
 
-                // Add ECS specific labels
-                staticConfig.Labels.AddLabelWithValue("ecs_cluster", discoveryTarget.EcsCluster, true);
-                staticConfig.Labels.AddLabelWithValue("ecs_service", discoveryTarget.EcsService, true);
-                staticConfig.Labels.AddLabelWithValue("ecs_task", discoveryTarget.EcsTaskArn);
-                staticConfig.Labels.AddLabelWithValue("ecs_task_definition_arn", discoveryTarget.EcsTaskDefinitionArn);
-
-                // Add optional CloudMap labels, when not empty
-                staticConfig.Labels.AddLabelWithValue("cloudmap_service_name", discoveryTarget.CloudMapServiceName, true);
-                staticConfig.Labels.AddLabelWithValue("cloudmap_service_instance_id", discoveryTarget.CloudMapServiceInstanceId);
-                staticConfig.Labels.AddLabelWithValue("cloudmap_service_type", discoveryTarget.ServiceType?.ToString() ?? "");
-
-                // Now add all the labels from the target
+                // Stage labels in a dictionary to sort them before adding to the static config
+                var interimLabels = new Dictionary<string, string>();
                 foreach (var discoveryLabel in discoveryTarget.Labels)
                 {
-                    staticConfig.Labels.AddLabelWithValue(discoveryLabel.Name, discoveryLabel.Value);
+                    interimLabels.AddLabelWithValue(discoveryLabel.Name, discoveryLabel.Value);
+                }
+
+                // Now sort the labels and add them to the static config
+                foreach (var entry in interimLabels.OrderBy(d=>d.Key.ToLower()))
+                {
+                    staticConfig.Labels.Add(entry.Key, entry.Value);
                 }
 
                 response.Add(staticConfig);
@@ -69,21 +65,16 @@ public static class PrometheusResponseFactory
     internal static void AddLabelWithValue(
         this Dictionary<string, string> labels,
         string labelName,
-        string labelValue,
-        bool isMetaLabel = false
+        string labelValue
     )
     {
         if (string.IsNullOrWhiteSpace(labelValue)) return;
 
         var validLabelName = labelName.ToValidPrometheusLabelName();
-        if (labels.TryAdd(validLabelName, labelValue) && isMetaLabel)
+        if (!labels.TryAdd(validLabelName, labelValue))
         {
-            // Add meta-label if it was added successfully
-            labels.TryAdd($"__meta_{validLabelName}", labelValue);
-            return;
+            Log.Debug("Failed to add label {LabelName} with value {LabelValue}", validLabelName, labelValue);
         }
-
-        Log.Debug("Failed to add label {LabelName} with value {LabelValue}", validLabelName, labelValue);
     }
 
     /// <summary>

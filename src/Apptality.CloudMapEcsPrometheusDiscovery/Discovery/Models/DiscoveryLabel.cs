@@ -8,17 +8,17 @@ public class DiscoveryLabel : IEquatable<DiscoveryLabel>
     /// <summary>
     /// Label name
     /// </summary>
-    public required string Name { get; init; }
+    public string Name { get; init; } = null!;
 
     /// <summary>
     /// Label value
     /// </summary>
-    public required string Value { get; init; }
+    public string Value { get; init; } = null!;
 
     /// <summary>
     /// Label priority
     /// </summary>
-    public required DiscoveryLabelPriority Priority { get; init; }
+    public DiscoveryLabelPriority Priority { get; init; }
 
     public bool Equals(DiscoveryLabel? other)
     {
@@ -49,11 +49,13 @@ public class DiscoveryLabel : IEquatable<DiscoveryLabel>
             return true;
         }
 
-        return obj.GetType() == GetType() && Equals((DiscoveryLabel) obj);
+        return obj.GetType() == GetType() && Equals((DiscoveryLabel)obj);
     }
 
     public override int GetHashCode()
     {
         return HashCode.Combine(Name, Value);
     }
+
+    public bool HasValue => !string.IsNullOrWhiteSpace(Value);
 }

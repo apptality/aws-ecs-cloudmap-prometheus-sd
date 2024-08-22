@@ -89,8 +89,41 @@ public class DiscoveryTargetBuilder
 
     public ICollection<DiscoveryLabel> Labels => _discoveryTarget.Labels;
 
+    /// <summary>
+    /// Adds system labels to the target - these are inferred from most valuable information
+    /// </summary>
+    internal DiscoveryTargetBuilder WithSystemLabels()
+    {
+        // Store system labels
+        List<DiscoverySystemLabel> systemLabels =
+        [
+            new EcsClusterDiscoverySystemLabel(_discoveryTarget),
+            new EcsServiceDiscoverySystemLabel(_discoveryTarget),
+            new EcsTaskDiscoverySystemLabel(_discoveryTarget),
+            new EcsTaskDefinitionDiscoverySystemLabel(_discoveryTarget),
+            new CloudMapServiceDiscoverySystemLabel(_discoveryTarget),
+            new CloudMapServiceInstanceDiscoverySystemLabel(_discoveryTarget),
+            new CloudMapServiceTypeDiscoverySystemLabel(_discoveryTarget)
+        ];
+
+        // Cast system labels to DiscoveryLabel
+        var labels = systemLabels.Select(DiscoveryLabel (l) => l).ToList();
+
+        WithLabels(labels);
+
+        // Cast system labels to DiscoveryMetadataLabel and provide these values as metadata to allow relabelling in Prometheus
+        labels = systemLabels.Select(DiscoveryLabel (l) => new DiscoveryMetadataLabel(l)).ToList();
+
+        WithLabels(labels);
+
+        return this;
+    }
+
     public DiscoveryTarget Build()
     {
+        // Add system labels
+        WithSystemLabels();
+
         return _discoveryTarget;
     }
 }

@@ -138,8 +138,8 @@ public sealed class DiscoveryOptions
     /// </summary>
     /// <remarks>
     /// This prefix has a special meaning and is used to identify the metrics path, port, and name
-    /// for the service scrape configuration (in a single ecs service you may have multiple
-    /// containers listening on different ports, possibly having a different path you need to scrape from).
+    /// for the service scrape configuration. In a single ecs service, you may have multiple
+    /// containers listening on different ports, possibly having a different path you need to scrape from.
     /// <para>
     /// 'PATH', 'PORT', 'NAME' will be appended to the prefix to identify
     /// metrics path, port, and scrape configuration names respectively.
@@ -174,7 +174,7 @@ public sealed class DiscoveryOptions
     /// </para>
     /// If a path is not provided, default path "/metrics" will be used.
     /// <br />
-    /// If a name is not provided, the service name will be omitted from labels ('scrape_cfg_name' label).
+    /// If a name is not provided, the service name will be omitted from labels ('scrape_target_name' label).
     /// <br />
     /// This directly affects the Prometheus http sd scrape configuration:
     /// <code>
@@ -184,7 +184,7 @@ public sealed class DiscoveryOptions
     ///    ],
     ///    "labels": {
     ///      "__metrics_path__": "${METRICS_PATH}",
-    ///      "scrape_cfg_name": "${METRICS_NAME}",
+    ///      "scrape_target_name": "${METRICS_NAME}",
     ///      ...
     ///     }
     /// }]
@@ -193,4 +193,70 @@ public sealed class DiscoveryOptions
     [Required]
     [RegularExpression(@"^[a-zA-Z]{1}[\w-]+[_]{1}$")]
     public string MetricsPathPortTagPrefix { get; set; } = "METRICS_";
+
+    /// <summary>
+    /// Semicolon separated string of relabel configurations to apply to the scrape configuration result.
+    /// This allows using simple syntax to create new labels with existing values,
+    /// or to combine multiple pre-calculated labels into a single label.
+    /// </summary>
+    /// <remarks>
+    /// The intended use case is to create new labels based on existing labels, so that you don't have to
+    /// modify your Grafana Dashboards or alerting rules when you change the way you tag your resources.
+    /// <br />
+    /// Relabel configurations are applied to the scrape configuration before it is returned to the client.
+    /// You can only operate using labels that are already present in the target.
+    /// <br />
+    /// Example:
+    /// Consider the following response of discovery target for configuration without relabeling:
+    /// <code>
+    ///  {
+    ///        "targets": ["10.200.10.200:8080"],
+    ///        "labels": {
+    ///            "__metrics_path__": "/metrics",
+    ///            "instance": "10.200.10.200",
+    ///            "scrape_target_name": "app",
+    ///            "ecs_cluster": "my-cluster",
+    ///            "ecs_service": "my-service",
+    ///            ...
+    ///        }
+    ///    },
+    /// </code>
+    /// By applying the following relabel configuration:
+    /// <code>
+    /// "service_and_cluster={{ecs_cluster}}-{{ecs_service}};"
+    /// </code>
+    /// This will create a new label 'service_and_cluster' with the value of 'ecs_cluster' and 'ecs_service' labels combined:
+    /// <code>
+    ///  {
+    ///        "targets": ["10.200.10.200:8080"],
+    ///        "labels": {
+    ///            "__metrics_path__": "/metrics",
+    ///            "instance": "10.200.10.200",
+    ///            "scrape_target_name": "app",
+    ///            "ecs_cluster": "my-cluster",
+    ///            "ecs_service": "my-service",
+    ///            "service_and_cluster": "my-cluster-my-service",
+    ///            ...
+    ///        }
+    ///    },
+    /// </code>
+    /// <br />
+    /// If your intent is to only 'rename' the existing label, you can use the following syntax:
+    /// <code>
+    /// "cluster={{ecs_cluster}};"
+    /// </code>
+    /// This will create new label 'cluster' with the value of 'ecs_cluster' label.
+    /// <br />
+    /// IMPORTANT:
+    /// <ul>
+    /// <li>1) If amy of the replacement tokens are not found in the source labels, it will not be replaced at all.</li>
+    /// <li>2) You can replace existing labels ("ecs_cluster=my-{{ecs_cluster}};").</li>
+    /// <li>3) You can have multiple relabel configurations for the same label. They will be applied in order defined ("a=1;a={{a}}-2;" will result in a="1-2").</li>
+    /// </ul>
+    /// <br/>
+    /// To have a fall-backs, use 'ExtraPrometheusLabels' option. These have the lowest priority,
+    /// and are only added to the response if the label is not already present in the target
+    /// (matching tag is not present in any of the original resources).
+    /// </remarks>
+    public string RelabelConfigurations { get; set; } = string.Empty;
 }
