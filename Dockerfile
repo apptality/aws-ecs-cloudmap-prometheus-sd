@@ -3,7 +3,7 @@
 
 # Linux (default)
 ARG BUILD_IMAGE_BASE=mcr.microsoft.com/dotnet/sdk:8.0-alpine
-ARG RUNTIME_IMAGE_BASE=mcr.microsoft.com/dotnet/runtime:8.0-alpine
+ARG RUNTIME_IMAGE_BASE=mcr.microsoft.com/dotnet/runtime-deps:8.0-alpine
 # Windows (built out of CI/CD)
 # ARG BUILD_IMAGE=mcr.microsoft.com/dotnet/sdk:8.0-nanoserver-ltsc2022
 # ARG RUNTIME_IMAGE=mcr.microsoft.com/dotnet/runtime:8.0-nanoserver-ltsc2022
@@ -26,12 +26,10 @@ RUN dotnet publish -a $TARGETARCH \
     ./src/$PROJECT_NAME/$PROJECT_NAME.csproj
 
 # Build the runtime image
-FROM ${RUNTIME_IMAGE_BASE}
+FROM ${RUNTIME_IMAGE_BASE} as final
 
-ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
-    DOTNET_RUNNING_IN_CONTAINER=true \
-    DOTNET_USE_POLLING_FILE_WATCHER=0 \
-    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+# Install curl for health checks
+RUN apk --no-cache add curl
 
 # create a new user and change directory ownership
 RUN adduser --disabled-password \
