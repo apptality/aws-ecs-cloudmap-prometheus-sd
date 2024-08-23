@@ -10,6 +10,10 @@ public class DiscoveryTargetBuilder
 {
     private readonly DiscoveryTarget _discoveryTarget = new();
 
+    private readonly List<RelabelConfiguration> _relabelConfigurations = [];
+
+    public ICollection<DiscoveryLabel> Labels => _discoveryTarget.Labels;
+
     public DiscoveryTargetBuilder WithCloudMapServiceName(string cloudMapServiceName)
     {
         _discoveryTarget.CloudMapServiceName = cloudMapServiceName;
@@ -81,6 +85,7 @@ public class DiscoveryTargetBuilder
                 // Remove the existing label if it's less important
                 _discoveryTarget.Labels.Remove(existingLabel);
             }
+
             // Add the new label
             _discoveryTarget.Labels.Add(label);
         }
@@ -90,16 +95,31 @@ public class DiscoveryTargetBuilder
 
     public DiscoveryTargetBuilder WithoutLabels(ICollection<DiscoveryLabel> labels)
     {
-        _discoveryTarget.Labels.RemoveAll(l => labels.Select(lb => lb.Name).Contains(l.Name));
+        _discoveryTarget.Labels.RemoveAll(l => labels.Select(lb => lb.Name.ToLower()).Contains(l.Name.ToLower()));
         return this;
     }
 
-    public ICollection<DiscoveryLabel> Labels => _discoveryTarget.Labels;
+    public DiscoveryTargetBuilder WithRelabelConfigurations(ICollection<RelabelConfiguration> relabelConfigurations)
+    {
+        _relabelConfigurations.AddRange(relabelConfigurations);
+        return this;
+    }
+
+    public DiscoveryTarget Build()
+    {
+        // Add system labels
+        ApplySystemLabels();
+
+        // Apply re-label configurations
+        ApplyRelabelConfigurations();
+
+        return _discoveryTarget;
+    }
 
     /// <summary>
     /// Adds system labels to the target - these are inferred from most valuable information
     /// </summary>
-    internal DiscoveryTargetBuilder WithSystemLabels()
+    private void ApplySystemLabels()
     {
         // Store system labels
         List<DiscoverySystemLabel> systemLabels =
@@ -122,15 +142,31 @@ public class DiscoveryTargetBuilder
         labels = systemLabels.Select(DiscoveryLabel (l) => new DiscoveryMetadataLabel(l)).ToList();
 
         WithLabels(labels);
-
-        return this;
     }
 
-    public DiscoveryTarget Build()
+    /// <summary>
+    /// Applies relabel configurations to the target
+    /// </summary>
+    private void ApplyRelabelConfigurations()
     {
-        // Add system labels
-        WithSystemLabels();
+        foreach (var relabelConfiguration in _relabelConfigurations)
+        {
+            var label = relabelConfiguration.ToDiscoveryLabel(_discoveryTarget.Labels);
+            if (label == null) continue;
+            // It is very important to add the label at each iteration,
+            // because the same label can be re-labeled multiple times,
+            // or it may be used in next replacement patterns.
+            WithLabels([label]);
+        }
 
-        return _discoveryTarget;
+        var temporaryLabelsKeys = _relabelConfigurations
+            .Where(l => l.Temporary)
+            .Select(l => l.TargetLabelName)
+            .ToList();
+
+        // Remove temporary labels (these are a byproduct of re-labelling), if any
+        _discoveryTarget.Labels.RemoveAll(
+            l => l.Name.StartsWith("_tmp", StringComparison.OrdinalIgnoreCase) && temporaryLabelsKeys.Contains(l.Name)
+        );
     }
 }

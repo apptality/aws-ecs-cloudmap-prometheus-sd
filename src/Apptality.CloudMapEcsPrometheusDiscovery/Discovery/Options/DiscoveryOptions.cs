@@ -251,7 +251,8 @@ public sealed class DiscoveryOptions
     /// <ul>
     /// <li>1) If amy of the replacement tokens are not found in the source labels, it will not be replaced at all.</li>
     /// <li>2) You can replace existing labels ("ecs_cluster=my-{{ecs_cluster}};").</li>
-    /// <li>3) You can have multiple relabel configurations for the same label. They will be applied in order defined ("a=1;a={{a}}-2;" will result in a="1-2").</li>
+    /// <li>3) All relabel configurations are applied in order defined.</li>
+    /// <li>4) You can have multiple relabel configurations for the same label. They will be applied in order defined ("a=1;a={{a}}-2;" will result in a="1-2").</li>
     /// </ul>
     /// <br/>
     /// To have a fall-backs, use 'ExtraPrometheusLabels' option. These have the lowest priority,

@@ -56,6 +56,4 @@ public class DiscoveryLabel : IEquatable<DiscoveryLabel>
     {
         return HashCode.Combine(Name, Value);
     }
-
-    public bool HasValue => !string.IsNullOrWhiteSpace(Value);
 }

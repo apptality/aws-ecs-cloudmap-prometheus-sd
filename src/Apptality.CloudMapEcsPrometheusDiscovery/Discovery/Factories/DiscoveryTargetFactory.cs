@@ -50,6 +50,9 @@ public class DiscoveryTargetFactory : IDiscoveryTargetFactory
                     // Build scrape configurations based on the discovery result and the labels aggregated
                     BuildScrapeConfigurations(builder, discoveryOptions);
 
+                    // Apply re-labeling rules
+                    builder.WithRelabelConfigurations(discoveryOptions.GetRelabelConfigurations());
+
                     discoveryTargets.Add(builder.Build());
                 }
             }

@@ -15,7 +15,7 @@ public static class DiscoveryOptionsExtensions
     public static string[] GetEcsClustersNames(this DiscoveryOptions discoveryOptions)
     {
         // Resolve clusters names from configuration
-        return CommaSeparatedStringToArray(discoveryOptions.EcsClusters);
+        return SemicolonSeparatedStringToArray(discoveryOptions.EcsClusters);
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public static class DiscoveryOptionsExtensions
     public static string[] GetCloudMapNamespaceNames(this DiscoveryOptions discoveryOptions)
     {
         // Resolve namespace names from configuration
-        return CommaSeparatedStringToArray(discoveryOptions.CloudMapNamespaces);
+        return SemicolonSeparatedStringToArray(discoveryOptions.CloudMapNamespaces);
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public static class DiscoveryOptionsExtensions
     /// </summary>
     public static ResourceTagSelector[] GetEcsServiceSelectorTags(this DiscoveryOptions discoveryOptions)
     {
-        return CommaSeparatedTagsStringToArray(discoveryOptions.EcsServiceSelectorTags);
+        return SemicolonSeparatedTagsStringToArray(discoveryOptions.EcsServiceSelectorTags);
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public static class DiscoveryOptionsExtensions
     /// </summary>
     public static ResourceTagSelector[] GetCloudMapServiceSelectorTags(this DiscoveryOptions discoveryOptions)
     {
-        return CommaSeparatedTagsStringToArray(discoveryOptions.CloudMapServiceSelectorTags);
+        return SemicolonSeparatedTagsStringToArray(discoveryOptions.CloudMapServiceSelectorTags);
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public static class DiscoveryOptionsExtensions
     public static ICollection<DiscoveryLabel> GetExtraPrometheusLabels(this DiscoveryOptions discoveryOptions)
     {
         var extraLabels = new List<DiscoveryLabel>();
-        var extraLabelsSource = CommaSeparatedStringToArray(discoveryOptions.ExtraPrometheusLabels);
+        var extraLabelsSource = SemicolonSeparatedStringToArray(discoveryOptions.ExtraPrometheusLabels);
         foreach (var extraLabel in extraLabelsSource)
         {
             var (key, value) = ParseKeyValuePair(extraLabel);
@@ -117,6 +117,19 @@ public static class DiscoveryOptionsExtensions
     }
 
     /// <summary>
+    /// Return collection of relabel configurations from the configuration
+    /// </summary>
+    public static ICollection<RelabelConfiguration> GetRelabelConfigurations(this DiscoveryOptions discoveryOptions)
+    {
+        var relabelConfigurationsSource = SemicolonSeparatedStringToArray(discoveryOptions.RelabelConfigurations);
+        return relabelConfigurationsSource.Select(tag =>
+        {
+            var (key, val) = ParseKeyValuePair(tag);
+            return new RelabelConfiguration { TargetLabelName = key, ReplacementPattern = val };
+        }).ToArray();
+    }
+
+    /// <summary>
     /// Based on the configuration, returns a list of tag key filters
     /// </summary>
     /// <returns>
@@ -129,7 +142,7 @@ public static class DiscoveryOptionsExtensions
     )
     {
         var tagKeyFilters = new List<string>();
-        var tagKeyFiltersSource = CommaSeparatedStringToArray(selector(discoveryOptions));
+        var tagKeyFiltersSource = SemicolonSeparatedStringToArray(selector(discoveryOptions));
         foreach (var tagKeyFilter in tagKeyFiltersSource)
         {
             if (string.IsNullOrWhiteSpace(tagKeyFilter)) continue;
@@ -149,13 +162,13 @@ public static class DiscoveryOptionsExtensions
     /// <param name="value">
     /// String containing key-value pairs separated by semicolon
     /// </param>
-    private static ResourceTagSelector[] CommaSeparatedTagsStringToArray(string value)
+    private static ResourceTagSelector[] SemicolonSeparatedTagsStringToArray(string value)
     {
-        var tagKeyValuePairs = CommaSeparatedStringToArray(value);
+        var tagKeyValuePairs = SemicolonSeparatedStringToArray(value);
         return tagKeyValuePairs.Select(tag =>
         {
             var (key, val) = ParseKeyValuePair(tag);
-            return new ResourceTagSelector {Key = key, Value = val};
+            return new ResourceTagSelector { Key = key, Value = val };
         }).ToArray();
     }
 
@@ -195,7 +208,7 @@ public static class DiscoveryOptionsExtensions
     /// Any semicolons that should be treated as part of the string
     /// must be declared as "%;" in the source string.
     /// </remarks>
-    private static string[] CommaSeparatedStringToArray(string value)
+    private static string[] SemicolonSeparatedStringToArray(string value)
     {
         const string semicolonSourceToken = "%;";
         const string semicolonReplacementToken = "<semicolon>";
