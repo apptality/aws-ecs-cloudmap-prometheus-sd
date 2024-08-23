@@ -45,4 +45,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.fullSemVer }}
+          tags:
+            - ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.MajorMinorPatch }}
+            - ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.majorMinorPatch }}-${{ steps.gitversion.outputs.shortSha }}
+            - ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.majorMinorPatch }}-${{ steps.gitversion.outputs.branchName }}-${{ steps.gitversion.outputs.shortSha }}

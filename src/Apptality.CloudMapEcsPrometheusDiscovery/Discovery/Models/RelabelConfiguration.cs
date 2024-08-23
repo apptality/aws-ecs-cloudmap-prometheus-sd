@@ -105,8 +105,6 @@ public class RelabelConfiguration
             Value = newLabelValue,
             Priority = DiscoveryLabelPriority.Relabel
         };
-
-        // If not all the tokens are present, return null, because the label cannot be built
     }
 
     /// <summary>

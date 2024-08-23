@@ -3,10 +3,10 @@
 [![Build and Publish Docker Images](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml/badge.svg?branch=dev)](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue)](/LICENSE)
 [![Docker Image Version](https://img.shields.io/docker/v/apptality/aws-ecs-cloudmap-prometheus-discovery?logo=docker&label=Latest%20Version)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery)
-[![Docker Image Size (tag)](https://img.shields.io/docker/image-size/apptality/aws-ecs-cloudmap-prometheus-discovery/0.1.0-alpha.45?logo=docker&label=Image%20Size)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery/tags)
+[![Docker Image Size (tag)](https://img.shields.io/docker/image-size/apptality/aws-ecs-cloudmap-prometheus-discovery/latest?logo=docker&label=Image%20Size)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery/tags)
 
 
-🚧 🚧 🚧 This repo is still work in progress and is subject to change.
+🚧 🚧 🚧 This repo is mostly stable and ready for production use. Most of the work is done around examples and documentation. There should be no breaking changes onwards.
 
 ## Overview
 
@@ -66,12 +66,12 @@ Example run command:
     -e AWS_SECRET_ACCESS_KEY="<secret>" \
     -e AWS_SESSION_TOKEN="<session_token>" \
     # ** OPTIONAL PARAMETERS **
-    # Will only include those services, which have 'prometheus_target' tag set to 'true'.
+    # Will only include those services, which have 'prom_scrape_target' tag set to 'yes'.
     # Leave blank to include all services in cluster(s)
-    -e DiscoveryOptions__EcsServiceSelectorTags="prometheus_target=true;" \
+    -e DiscoveryOptions__EcsServiceSelectorTags="prom_scrape_target=yes;" \
     # Same as above, but for filtering out CloudMap services
     # Leave blank ot include all services in namespace(s)
-    -e DiscoveryOptions__CloudMapServiceSelectorTags="prometheus_target=true;" \
+    -e DiscoveryOptions__CloudMapServiceSelectorTags="prom_scrape_target=yes;" \
     # Semicolon separated string of tag names to include in the service discovery response as metadata.
     # Supports glob pattern matching using * and ?.
     -e DiscoveryOptions__EcsTaskTags="*" \
@@ -105,19 +105,26 @@ Example output:
     ],
     "labels": {
       "__metrics_path__": "/metrics",
-      "instance": "10.200.10.200",
-      "ecs_cluster": "my-ecs-cluster",
-      "ecs_service": "my-fargate-application",
-      "ecs_task": "arn:aws:ecs:us-west-2:123456789012:task/my-ecs-cluster/c88nc14799fa46d794c1899612061h3s",
-      "ecs_task_definition_arn": "arn:aws:ecs:us-west-2:123456789012:task-definition/my-fargate-application:2",
-      "cloudmap_service_name": "service-application",
-      "cloudmap_service_instance_id": "kj2pc14799fa46d794c189961206k00q",
-      "cloudmap_service_type": "ServiceConnect",
-      "custom_resource_tag_environment": "dev",
-      "custom_resource_tag_component": "my-cool-application",
+      "instance": "10.200.65.101",
+      "scrape_target_name": "app",
+      "__meta_cloudmap_service_instance_id": "c88nc14799fa46d794c1899612061h3s",
+      "__meta_cloudmap_service_name": "service-app",
+      "__meta_cloudmap_service_type": "ServiceConnect",
+      "__meta_ecs_cluster": "my-ecs-cluster",
+      "__meta_ecs_service": "my-fargate-application",
+      "__meta_ecs_task": "arn:aws:ecs:us-west-2:123456789012:task/my-ecs-cluster/c88nc14799fa46d794c1899612061h3s",
+      "__meta_ecs_task_definition": "arn:aws:ecs:us-west-2:123456789012:task-definition/my-fargate-application:2",
+      "_sys_cloudmap_service_instance_id": "c88nc14799fa46d794c1899612061h3s",
+      "_sys_cloudmap_service_name": "my-fargate-application",
+      "_sys_cloudmap_service_type": "ServiceConnect",
+      "_sys_ecs_cluster": "my-ecs-cluster",
+      "_sys_ecs_service": "my-fargate-application",
+      "_sys_ecs_task": "arn:aws:ecs:us-west-2:123456789012:task/my-ecs-cluster/c88nc14799fa46d794c1899612061h3s",
+      "_sys_ecs_task_definition": "arn:aws:ecs:us-west-2:123456789012:task-definition/my-fargate-application:2",
+      "prom_scrape_target": "yes",
+      "AmazonECSManaged": "true",
       "custom_static_tag": "my-static-tag",
-      "cluster_and_service": "my-ecs-cluster-my-fargate-application",
-      "AmazonECSManaged": "true"
+      "cluster_and_service": "my-ecs-cluster-my-fargate-application"
     }
   },
   ...
@@ -129,6 +136,51 @@ Plays nice with and originally designed for [OpenTelemetry receivers config](htt
 ## Configuration Options
 
 Please refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for complete list of supported configuration options.
+
+## Storing this image in ECR
+
+`~/.scripts/dockerhub-to-ecr.sh` script is intended for users who need control over their Docker images in AWS ECR, allowing to pull an image from DockerHub, re-tag it, and push it to an ECR repository with customizable options for platform and tagging.
+
+Run the script specifying your ECR URL as the first positional parameter:
+
+```bash
+# <paste in your AWS credential>
+
+cd ./scripts
+
+chmod +x dockerhub-to-ecr.sh
+
+./dockerhub-to-ecr.sh <target_ecr_repository_url> \
+    # Defaults to 'apptality/aws-ecs-cloudmap-prometheus-discovery:latest'
+    [source_dockerhub_image_url] \
+    # Specify explicit value of image tag you want to label your ECR image with.
+    # By default, same tag as on source image will be applied.
+    [target_ecr_repository_tag (Default: same as source)] \
+     # Specify docker platform to re-push. Amd64/Arm64 available.
+    [docker_image_platform: 'linux/amd64' (Default) | 'linux/arm64']
+```
+
+Example:
+
+```bash
+./dockerhub-to-ecr.sh 123456789012.dkr.ecr.us-west-2.amazonaws.com/tools/ecs-sd
+```
+
+The above script will:
+
+1. Authenticate with AWS ECR region `us-west-2`
+1. Pull `linux/amd64` platform of `apptality/aws-ecs-cloudmap-prometheus-discovery:latest` locally
+1. Re-tag it to `123456789012.dkr.ecr.us-west-2.amazonaws.com/tools/ecs-sd:latest`
+1. Push `123456789012.dkr.ecr.us-west-2.amazonaws.com/tools/ecs-sd:latest` to ECR
+
+### Positional Parameters
+
+- **`target_ecr_repository_url`**: The full URL of your target AWS ECR repository without tag.
+- **`source_dockerhub_image_url` (optional)**: DockerHub image to pull (default: `apptality/aws-ecs-cloudmap-prometheus-discovery:latest`).
+- **`target_ecr_repository_tag` (optional)**: ECR image tag (defaults to the source image tag).
+- **`docker_image_platform` (optional)**: Image platform (`linux/amd64` by default).
+
+> Note: you need to create destination ECR repository first.
 
 ## Contributing
 
