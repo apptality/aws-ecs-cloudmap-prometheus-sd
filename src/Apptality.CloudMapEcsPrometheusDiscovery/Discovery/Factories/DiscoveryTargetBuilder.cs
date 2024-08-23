@@ -71,10 +71,17 @@ public class DiscoveryTargetBuilder
         // (lower value of DiscoveryLabelPriority property)
         foreach (var label in labels)
         {
-            var existingLabel = _discoveryTarget.Labels.FirstOrDefault(l => l.Name == label.Name);
-            if (existingLabel != null && existingLabel.Priority <= label.Priority) continue;
-            // remove label with lower priority and add new label
-            _discoveryTarget.Labels.RemoveAll(l => l.Name == label.Name);
+            // Try to find an existing label with the same name
+            var existingLabel = _discoveryTarget.Labels.FirstOrDefault(l =>
+                string.Equals(l.Name, label.Name, StringComparison.OrdinalIgnoreCase));
+            // If the existing label has a lower priority, skip it
+            if (existingLabel != null)
+            {
+                if (existingLabel.Priority < label.Priority) continue;
+                // Remove the existing label if it's less important
+                _discoveryTarget.Labels.Remove(existingLabel);
+            }
+            // Add the new label
             _discoveryTarget.Labels.Add(label);
         }
 
