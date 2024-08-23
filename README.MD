@@ -3,7 +3,7 @@
 [![Build and Publish Docker Images](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml/badge.svg?branch=dev)](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue)](/LICENSE)
 [![Docker Image Version](https://img.shields.io/docker/v/apptality/aws-ecs-cloudmap-prometheus-discovery?logo=docker&label=Latest%20Version)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery)
-[![Docker Image Size (tag)](https://img.shields.io/docker/image-size/apptality/aws-ecs-cloudmap-prometheus-discovery/0.1.0-alpha.40?logo=docker&label=Image%20Size)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery/tags)
+[![Docker Image Size (tag)](https://img.shields.io/docker/image-size/apptality/aws-ecs-cloudmap-prometheus-discovery/0.1.0-alpha.45?logo=docker&label=Image%20Size)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery/tags)
 
 
 🚧 🚧 🚧 This repo is still work in progress and is subject to change.
@@ -40,7 +40,7 @@ Below is a high level overview of what application is capable of. For the full l
   * Supports rich mechanism for re-labling, so you don't have to fix your Grafana dashboards. See `RelabelConfigurations` configuration property for more details.
   * Exposes health check endpoint: `/health`
 
-At least one of `EcsClusters` or `CloudMapNamespaces` must be provided for application to work. If you would like to include both [Service Connect](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html) and [Service Discovery](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html) targets, `CloudMapNamespaces` must be supplied (with or without `EcsClusters`). When **both parameters** are supplied, the end result is only an intersection of targets that exist in ECS clusters supplied and CloudMap namespaces provided.
+At least one of `EcsClusters` or `CloudMapNamespaces` must be provided for application to work. If you would like to include both [Service Connect](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html) and [Service Discovery](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html) targets, `CloudMapNamespaces` must be supplied (with or without `EcsClusters`). When **both parameters** are supplied, the end result is only an intersection of targets that exist in ECS clusters and CloudMap namespaces provided.
 
 > **Permissions**: IAM permissions are required to discover ECS clusters (`ecs:Get*`, `ecs:List*`, `ecs:Describe*`) and CloudMap namespaces (`servicediscovery:Get*`, `servicediscovery:List*`, `servicediscovery:Discover*`, `route53:Get*`)
 
