@@ -46,7 +46,7 @@ At least one of `EcsClusters` or `CloudMapNamespaces` must be provided for appli
 
 ## Usage Example
 
-> 🚧 Documentation is still in progress, it'll be finished in next week or so.
+For the full example of running this in AWS, please navigate to [/example](/example) folder.
 
 You can also refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for supported configuration parameters.
 
@@ -82,8 +82,12 @@ Example run command:
     # Will be added to all discovered targets.
     -e DiscoveryOptions__ExtraPrometheusLabels="custom_static_tag=my-static-tag;" \
     # Tag prefix to identify metrics port, [path | "/metrics"], [name | ""] triplets.
-    # Please refer to the documentation to learn more.
+    # Please refer to the configuration options to learn more.
     -e DiscoveryOptions__MetricsPathPortTagPrefix="METRICS_" \
+    # Add new or modify existing labels in the response using token replacements,
+    # to prevent the need of modifying your Grafana dashboards.
+    # Please refer to the configuration options to learn more.
+    -e DiscoveryOptions__RelabelConfigurations="cluster_and_service={{ecs_cluster}}-{{ecs_service}}" \
     # Instructs .NET application to listen on 9001 inside the container
     -e ASPNETCORE_URLS="http://*:9O01" \
     # ** DOCKER **
@@ -112,6 +116,7 @@ Example output:
       "custom_resource_tag_environment": "dev",
       "custom_resource_tag_component": "my-cool-application",
       "custom_static_tag": "my-static-tag",
+      "cluster_and_service": "my-ecs-cluster-my-fargate-application",
       "AmazonECSManaged": "true"
     }
   },
@@ -119,134 +124,11 @@ Example output:
 ]
 ```
 
-Plays nice with [OpenTelemetry receivers config](https://opentelemetry.io/docs/collector/configuration/#receivers):
+Plays nice with and originally designed for [OpenTelemetry receivers config](https://opentelemetry.io/docs/collector/configuration/#receivers). See [example](/example) for more details.
 
-Considering your ECS Task Definition for discovery looks like this:
+## Configuration Options
 
-```terraform
-resource "aws_ecs_task_definition" "task_definition" {
-  family                   = "${local.resource_prefix}-${local.ecs_name}"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "512"
-  memory                   = "1024"
-  execution_role_arn       = aws_iam_role.ecs_task_role.arn
-  task_role_arn            = aws_iam_role.ecs_task_role.arn
-
-  runtime_platform {
-    operating_system_family = "LINUX"
-    cpu_architecture        = "X86_64"
-  }
-
-  container_definitions = jsonencode([
-    {
-      name      = "${local.ecs_name}-config-reloader"
-      image     = "apptality/aws-ecs-cloudmap-prometheus-discovery:0.1.0-alpha.29"
-      cpu       = 128
-      memory    = 128
-      essential = true
-      portMappings = [
-        {
-          containerPort = 9001
-          protocol      = "tcp"
-        }
-      ]
-      environment = [
-        {
-          name  = "AWS_REGION"
-          value = local.region
-        },
-        ... REST OF APPLICATION CONFIGURATION ...
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = var.cloud_watch_log_group_name
-          awslogs-region        = local.region
-          awslogs-stream-prefix = "${local.ecs_name}-config-reloader"
-        }
-      }
-    },
-    {
-      name      = "${local.ecs_name}-collector"
-      image     = "public.ecr.aws/aws-observability/aws-otel-collector:latest"
-      cpu       = 384
-      memory    = 896
-      essential = true
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = var.cloud_watch_log_group_name
-          awslogs-region        = local.region
-          awslogs-stream-prefix = "${local.ecs_name}-collector"
-        }
-      }
-      secrets = [
-        {
-          # Contents of "otel-collector-config.yaml" below stored in SSM
-          name      = "AOT_CONFIG_CONTENT"
-          valueFrom = aws_ssm_parameter.ecs_opentelemtry_config.name
-        }
-      ]
-      portMappings = [
-        {
-          containerPort = 2000
-          protocol      = "udp"
-        }
-      ]
-      dependsOn = [
-        {
-          containerName = "${local.ecs_name}-config-reloader"
-          condition     = "START"
-        }
-      ]
-    }
-  ])
-}
-```
-
-Your OTEL configuration may look something similar to:
-
-```yaml
-# otel-collector-config.yaml
-receivers:
-  prometheus:
-    config:
-      global:
-        scrape_interval: 15s
-        scrape_timeout: 10s
-      scrape_configs:
-        - job_name: ecs_services
-          http_sd_configs:
-            - url: http://localhost:9001/prometheus-targets
-              refresh_interval: 10s
-exporters:
-  prometheusremotewrite:
-    endpoint: https://aps-workspaces.${REGION}.amazonaws.com/workspaces/${WORKSPACE}/api/v1/remote_write
-    resource_to_telemetry_conversion:
-      enabled: true
-    auth:
-      authenticator: sigv4auth
-extensions:
-  sigv4auth:
-    service: aps
-    region: ${REGION}
-  health_check: null
-  pprof:
-    endpoint: ":1888"
-  zpages:
-    endpoint: ":55679"
-service:
-  extensions:
-    - sigv4auth
-    - pprof
-    - zpages
-    - health_check
-  pipelines:
-    metrics:
-      receivers: [prometheus]
-      exporters: [prometheusremotewrite]
-```
+Please refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for complete list of supported configuration options.
 
 ## Contributing
 
