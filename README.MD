@@ -7,15 +7,14 @@
 
 ## Overview
 
-This application facilitates discovery of ECS and/or CloudMap resources,
-specifically tailored to be compatible with [Prometheus HTTP Service Discovery](https://prometheus.io/docs/prometheus/latest/http_sd/#writing-http-service-discovery).
+This application facilitates discovery of ECS and/or CloudMap resources and compatible with [Prometheus HTTP Service Discovery](https://prometheus.io/docs/prometheus/latest/http_sd/#writing-http-service-discovery).
 
-This solution leverages AWS API to dynamically discover:
+Application leverages AWS API to dynamically discover:
 
 * [ECS Clusters](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/clusters.html), related ECS Services, and ECS Tasks
 * [CloudMap Namespaces](https://docs.aws.amazon.com/cloud-map/latest/dg/working-with-namespaces.html), registered Service Connect and Service Discovery services, and their instances
 
-making it easier for Prometheus to monitor these services without hardcoding their addresses or ports, or using any kind of [file-based discovery](https://prometheus.io/docs/guides/file-sd/), thus can be run as a standalone application (as it's own AWS ECS Service, for example).
+making it easier for Prometheus to monitor these services without hardcoding their addresses and ports, or using any kind of [file-based discovery](https://prometheus.io/docs/guides/file-sd/) (thus can be run as a standalone application: as it's own AWS ECS Service, for example).
 
 ## Features
 
@@ -37,21 +36,17 @@ Below is a high level overview of what application is capable of. For the full l
   * Supports rich mechanism for re-labling, so you don't have to fix your Grafana dashboards. See `RelabelConfigurations` configuration property for more details.
   * Exposes health check endpoint: `/health`
 
-At least one of `EcsClusters` or `CloudMapNamespaces` must be provided for application to work. If you would like to include both [Service Connect](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html) and [Service Discovery](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html) targets, `CloudMapNamespaces` must be supplied (with or without `EcsClusters`). When **both parameters** are supplied, the end result is only an intersection of targets that exist in ECS clusters and CloudMap namespaces provided.
+At least one of `EcsClusters` or `CloudMapNamespaces` must be provided for application to work. If you would like to include both [Service Connect](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html) and [Service Discovery](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html) targets, `CloudMapNamespaces` must be specified (with or without `EcsClusters`). When **both parameters** are specified, the end result is only an intersection of targets that exist in ECS clusters and CloudMap namespaces provided.
 
 > **Permissions**: IAM permissions are required to discover ECS clusters (`ecs:Get*`, `ecs:List*`, `ecs:Describe*`) and CloudMap namespaces (`servicediscovery:Get*`, `servicediscovery:List*`, `servicediscovery:Discover*`, `route53:Get*`)
 
-## Configuration Options
-
-Please refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for complete list of supported configuration options.
 
 ## Usage Example
 
-For the full example of running this in AWS, please navigate to [/example](/example) folder.
+For the full example of running this in AWS, please navigate to [/example](/example) folder. Integrates with [OpenTelemetry receivers config](https://opentelemetry.io/docs/collector/configuration/#receivers).
 
-You can also refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for supported configuration parameters.
 
-Plays nice with and originally designed for [OpenTelemetry receivers config](https://opentelemetry.io/docs/collector/configuration/#receivers).
+Refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for all supported configuration options.
 
 Example run command:
 
@@ -64,7 +59,7 @@ Example run command:
     # If running outside of AWS - pass credentials explicitly
     # If running in AWS - use Task IAM Role.
     # IMPORTANT: Credentials need to have permissions to describe ECS cluster(optionally CloudMap namespaces)
-    -e AWS_REGION="us-west-2" \
+    -e AWS_REGION="us-west-1" \
     -e AWS_ACCESS_KEY_ID="<key>" \
     -e AWS_SECRET_ACCESS_KEY="<secret>" \
     -e AWS_SESSION_TOKEN="<session_token>" \
@@ -75,7 +70,7 @@ Example run command:
     # Same as above, but for filtering out CloudMap services
     # Leave blank ot include all services in namespace(s)
     -e DiscoveryOptions__CloudMapServiceSelectorTags="prom_scrape_target=yes;" \
-    # Semicolon separated string of tag names to include in the service discovery response as metadata.
+    # Semicolon separated string of tag keys to include in the service discovery response as metadata.
     # Supports glob pattern matching using * and ?.
     -e DiscoveryOptions__EcsTaskTags="*" \
     -e DiscoveryOptions__EcsServiceTags="*" \
@@ -154,27 +149,32 @@ Response is returned in [HTTP_SD format](https://prometheus.io/docs/prometheus/l
 
 Success response is returned with `application/json` HTTP Content Type, and `200` HTTP status code.
 
-Here are some clarification on labels returned:
+Some clarification on labels returned:
 
-* **scrape_target_name** - when any of resource contains `METRICS_NAME_` AWS Resource Tag - this label will have Tags' value. Because ECS Tasks can be composed of multiple container you would like to scrape from - this helps to denote between such container when running PromQL queries.
-* **__meta** - tags starting with this prefix are meta labels, and are not included into the resulting set stored Prometheus, but can be used for [re-labeling](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config).
-* **_sys** - tags starting with this prefix are generated out of AWS Resources properties (ECS, CloudMap). They are prefixed as such in order to prevent conflict with your existing infrastructure configuration, and combined with `RelabelConfigurations` enable powerful manipulations of the resulting labels set.
+* **scrape_target_name** - when any of resource contains `METRICS_NAME_` AWS Resource Tag - this label will have tag value. ECS Tasks can contain multiple containers you would like to scrape from, this label being present helps to denote between such containers when running PromQL queries.
+* **__meta** - labels starting with this prefix are meta labels, and are not included into the resulting set stored Prometheus, but can be used for [re-labeling](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config).
+* **_sys** - labels starting with this prefix are generated out of AWS Resources properties (ECS, CloudMap). They are prefixed as such in order to prevent conflict with your existing infrastructure configuration, and combined with `RelabelConfigurations` enable powerful manipulations of the resulting labels set.
 
 Anything else returned is either inferred from AWS Resource Tags specified via selectors (`EcsTaskTags`, `EcsServiceTags`, `CloudMapServiceTags`, `CloudMapNamespaceTags`), supplied via `ExtraPrometheusLabels`, or product of `RelabelConfigurations` configurations.
 
-Please note, that tags are resolved in the following priority:
+Please note, that tags are resolved from AWS resource in the following order:
 
-`ECS Task` > `ECS Service` > `Cloud Map Service` > `Cloud Map Namespace`
+`ECS Task` > `ECS Service` > `CloudMap Service` > `CloudMap Namespace`
 
-If no value is provided, no tags will be included.
+meaning that if ECS Service has tag `"MyCustomTag=EcsService"` and CloudMap Service has the same tag, but with different value: `"MyCustomTag=CloudMap"`  - the resulting scrape target label will have value of the former:
 
-To include all tags, set value to "*".
+```json
+[
+  {
+    "targets": [ "<host>", ... ],
+    "labels": {
+      "MyCustomTag": "EcsService", ...
+    }
+  },
+  ...
+]
 
-**Example**:
-
-  Having "EcsTaskTags" set to "service_discovery;app_*"
-  will include all tags with their values where aws tag 'Key' property
-  starts with "app_", or aws tag 'Key' property equals "service_discovery".
+```
 
 ### Error
 
