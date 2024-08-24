@@ -15,7 +15,7 @@ This solution leverages AWS API to dynamically discover:
 * [ECS Clusters](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/clusters.html), related ECS Services, and ECS Tasks
 * [CloudMap Namespaces](https://docs.aws.amazon.com/cloud-map/latest/dg/working-with-namespaces.html), registered Service Connect and Service Discovery services, and their instances
 
-making it easier for Prometheus to monitor these services without hardcoding their addresses or ports, or using any kind of file-based service discovery.
+making it easier for Prometheus to monitor these services without hardcoding their addresses or ports, or using any kind of [file-based discovery](https://prometheus.io/docs/guides/file-sd/), thus can be run as a standalone application (as it's own AWS ECS Service, for example).
 
 ## Features
 
@@ -134,7 +134,6 @@ Example output:
 ]
 ```
 
-
 ## Response Structure
 
 Response is returned in [HTTP_SD format](https://prometheus.io/docs/prometheus/latest/http_sd/#http_sd-format) compatible format:
@@ -218,7 +217,7 @@ chmod +x dockerhub-to-ecr.sh
     # Specify explicit value of image tag you want to label your ECR image with.
     # By default, same tag as on source image will be applied.
     [target_ecr_repository_tag (Default: same as source)] \
-     # Specify docker platform to re-push. Amd64/Arm64 available.
+    # Specify docker platform to re-push. Amd64/Arm64 available.
     [docker_image_platform: 'linux/amd64' (Default) | 'linux/arm64']
 ```
 
@@ -243,6 +242,25 @@ The above script will:
 * **`docker_image_platform` (optional)**: Image platform (`linux/amd64` by default).
 
 > Note: you need to create destination ECR repository first.
+
+## References
+
+This application is heavily influenced by the following articles:
+
+* [Metrics collection from Amazon ECS using Amazon Managed Service for Prometheus](https://aws.amazon.com/blogs/opensource/metrics-collection-from-amazon-ecs-using-amazon-managed-service-for-prometheus/)
+* [Metrics and traces collection from Amazon ECS using AWS Distro for OpenTelemetry with dynamic service discovery](https://aws.amazon.com/blogs/containers/metrics-and-traces-collection-from-amazon-ecs-using-aws-distro-for-opentelemetry-with-dynamic-service-discovery/)
+
+Definitely suggest reading up on what is [AWS Distro for OpenTelemetry (ADOT)](https://aws-otel.github.io/docs/introduction), as it provides open source APIs, libraries, and agents to collect logs, metrics, and traces from your applications.
+
+For how to integrate AWS AMP (Prometheus) with your Grafana please refer to [Set up Grafana open source or Grafana Enterprise for use with Amazon Managed Service for Prometheus](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-query-standalone-grafana.html) article by AWS.
+
+## Alternatives
+
+There are definitely some discovery tools that are alternative to current application:
+
+* [Container Insights Prometheus metrics monitoring](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/ContainerInsights-Prometheus-Setup-autodiscovery-ecs.html) discovers your infrastructure using CloudWatch
+* [aws-cloudmap-prometheus-sd](https://github.com/awslabs/aws-cloudmap-prometheus-sd) plugin by AWS
+* [prometheus-for-ecs](https://github.com/aws-samples/prometheus-for-ecs) plugin by AWS. Definitely dig into [deploy-prometheus](https://github.com/aws-samples/prometheus-for-ecs/tree/main/deploy-prometheus) and [deploy-adot](https://github.com/aws-samples/prometheus-for-ecs/tree/main/deploy-adot) folders of the repository to get a good understanding of how integrations are being set up.
 
 ## Contributing
 
