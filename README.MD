@@ -1,12 +1,9 @@
 # AWS ECS & CloudMap Prometheus Discovery
 
-[![Build and Publish Docker Images](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml/badge.svg?branch=dev)](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml)
+[![Build](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml/badge.svg?branch=develop)](https://github.com/apptality/aws-ecs-cloudmap-prometheus-sd/actions/workflows/docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue)](/LICENSE)
 [![Docker Image Version](https://img.shields.io/docker/v/apptality/aws-ecs-cloudmap-prometheus-discovery?logo=docker&label=Latest%20Version)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery)
 [![Docker Image Size (tag)](https://img.shields.io/docker/image-size/apptality/aws-ecs-cloudmap-prometheus-discovery/latest?logo=docker&label=Image%20Size)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery/tags)
-
-
-🚧 🚧 🚧 This repo is mostly stable and ready for production use. Most of the work is done around examples and documentation. There should be no breaking changes onwards.
 
 ## Overview
 
@@ -44,11 +41,17 @@ At least one of `EcsClusters` or `CloudMapNamespaces` must be provided for appli
 
 > **Permissions**: IAM permissions are required to discover ECS clusters (`ecs:Get*`, `ecs:List*`, `ecs:Describe*`) and CloudMap namespaces (`servicediscovery:Get*`, `servicediscovery:List*`, `servicediscovery:Discover*`, `route53:Get*`)
 
+## Configuration Options
+
+Please refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for complete list of supported configuration options.
+
 ## Usage Example
 
 For the full example of running this in AWS, please navigate to [/example](/example) folder.
 
 You can also refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for supported configuration parameters.
+
+Plays nice with and originally designed for [OpenTelemetry receivers config](https://opentelemetry.io/docs/collector/configuration/#receivers).
 
 Example run command:
 
@@ -92,7 +95,7 @@ Example run command:
     -e ASPNETCORE_URLS="http://*:9O01" \
     # ** DOCKER **
     -p 9001:9001 \
-    apptality/aws-ecs-cloudmap-prometheus-discovery:<version>
+    apptality/aws-ecs-cloudmap-prometheus-discovery:latest
 ```
 
 Example output:
@@ -131,11 +134,70 @@ Example output:
 ]
 ```
 
-Plays nice with and originally designed for [OpenTelemetry receivers config](https://opentelemetry.io/docs/collector/configuration/#receivers). See [example](/example) for more details.
 
-## Configuration Options
+## Response Structure
 
-Please refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json) for complete list of supported configuration options.
+Response is returned in [HTTP_SD format](https://prometheus.io/docs/prometheus/latest/http_sd/#http_sd-format) compatible format:
+
+```json
+[
+  {
+    "targets": [ "<host>", ... ],
+    "labels": {
+      "<labelname>": "<labelvalue>", ...
+    }
+  },
+  ...
+]
+```
+
+### Success
+
+Success response is returned with `application/json` HTTP Content Type, and `200` HTTP status code.
+
+Here are some clarification on labels returned:
+
+* **scrape_target_name** - when any of resource contains `METRICS_NAME_` AWS Resource Tag - this label will have Tags' value. Because ECS Tasks can be composed of multiple container you would like to scrape from - this helps to denote between such container when running PromQL queries.
+* **__meta** - tags starting with this prefix are meta labels, and are not included into the resulting set stored Prometheus, but can be used for [re-labeling](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config).
+* **_sys** - tags starting with this prefix are generated out of AWS Resources properties (ECS, CloudMap). They are prefixed as such in order to prevent conflict with your existing infrastructure configuration, and combined with `RelabelConfigurations` enable powerful manipulations of the resulting labels set.
+
+Anything else returned is either inferred from AWS Resource Tags specified via selectors (`EcsTaskTags`, `EcsServiceTags`, `CloudMapServiceTags`, `CloudMapNamespaceTags`), supplied via `ExtraPrometheusLabels`, or product of `RelabelConfigurations` configurations.
+
+Please note, that tags are resolved in the following priority:
+
+`ECS Task` > `ECS Service` > `Cloud Map Service` > `Cloud Map Namespace`
+
+If no value is provided, no tags will be included.
+
+To include all tags, set value to "*".
+
+**Example**:
+
+  Having "EcsTaskTags" set to "service_discovery;app_*"
+  will include all tags with their values where aws tag 'Key' property
+  starts with "app_", or aws tag 'Key' property equals "service_discovery".
+
+### Error
+
+When application runs into an error, response is returned with `500` HTTP status code:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.6.1",
+  "title": "An error occurred while processing your request.",
+  "status": 500
+}
+```
+
+You'll need to investigate server logs for exception details:
+
+```log
+2024-08-20 21:22:23.242 -03:00 [ERR] HTTP GET /prometheus-targets responded 500 in 99.9711 ms
+2024-08-20 21:22:23.243 -03:00 [ERR] An unhandled exception has occurred while executing the request.
+Microsoft.Extensions.Options.OptionsValidationException: At least one of 'EcsClusters' or 'CloudMapNamespaces' name must be specified.
+   at Microsoft.Extensions.Options.OptionsFactory`1.Create(String name)
+...
+```
 
 ## Storing this image in ECR
 
@@ -175,10 +237,10 @@ The above script will:
 
 ### Positional Parameters
 
-- **`target_ecr_repository_url`**: The full URL of your target AWS ECR repository without tag.
-- **`source_dockerhub_image_url` (optional)**: DockerHub image to pull (default: `apptality/aws-ecs-cloudmap-prometheus-discovery:latest`).
-- **`target_ecr_repository_tag` (optional)**: ECR image tag (defaults to the source image tag).
-- **`docker_image_platform` (optional)**: Image platform (`linux/amd64` by default).
+* **`target_ecr_repository_url`**: The full URL of your target AWS ECR repository without tag.
+* **`source_dockerhub_image_url` (optional)**: DockerHub image to pull (default: `apptality/aws-ecs-cloudmap-prometheus-discovery:latest`).
+* **`target_ecr_repository_tag` (optional)**: ECR image tag (defaults to the source image tag).
+* **`docker_image_platform` (optional)**: Image platform (`linux/amd64` by default).
 
 > Note: you need to create destination ECR repository first.
 

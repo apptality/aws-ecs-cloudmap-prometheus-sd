@@ -109,6 +109,18 @@ internal static class Startup
     }
 
     /// <summary>
+    /// Adds ProblemDetails middleware to the application
+    /// </summary>
+    /// <remarks>
+    /// You can read more <a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/handle-errors?view=aspnetcore-8.0">here</a>
+    /// </remarks>
+    private static WebApplicationBuilder AddCentralizedErrorHandling(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddProblemDetails();
+        return builder;
+    }
+
+    /// <summary>
     /// Adds all infrastructure configurations to the application
     /// </summary>
     internal static WebApplicationBuilder AddInfrastructure(this WebApplicationBuilder builder)
@@ -119,18 +131,29 @@ internal static class Startup
             .AddLogging()
             .AddHealthChecks()
             .AddCaching()
-            .AddResponseSerializers();
+            .AddResponseSerializers()
+            .AddCentralizedErrorHandling();
     }
 
     /// <summary>
     /// Enables using infrastructure services
     /// </summary>
-    internal static IApplicationBuilder UseInfrastructure(this IApplicationBuilder builder)
+    internal static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app)
     {
-        builder
-            .UseHealthChecks("/health")
-            .UseSerilogRequestLogging();
+        return app.UseHealthChecks("/health").UseSerilogRequestLogging();
+    }
 
-        return builder;
+    /// <summary>
+    /// Enables centralized error handling
+    /// </summary>
+    internal static IApplicationBuilder UseCentralizedErrorHandling(this IApplicationBuilder app)
+    {
+        // Use exception handler to handle all exceptions by default
+        app.UseExceptionHandler(exceptionHandlerApp =>
+            exceptionHandlerApp.Run(async context =>
+                await Results.Problem(statusCode: StatusCodes.Status500InternalServerError).ExecuteAsync(context)
+            )
+        );
+        return app;
     }
 }

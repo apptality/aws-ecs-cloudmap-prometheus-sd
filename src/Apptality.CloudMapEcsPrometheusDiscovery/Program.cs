@@ -12,8 +12,11 @@ var app = WebApplication
     .AddDiscovery()
     .Build();
 
-// Use infrastructure services
-app.UseInfrastructure();
+app
+    // Use infrastructure services
+    .UseInfrastructure()
+    // Use centralized error handling
+    .UseCentralizedErrorHandling();
 
 // Log startup
 var logger = app.Services.GetService<ILogger<Program>>()!;
