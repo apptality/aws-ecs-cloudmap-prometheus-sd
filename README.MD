@@ -105,7 +105,7 @@ Example output:
     ],
     "labels": {
       "__metrics_path__": "/metrics",
-      "instance": "10.200.65.101",
+      "instance": "10.200.10.200",
       "scrape_target_name": "app",
       "__meta_cloudmap_service_instance_id": "c88nc14799fa46d794c1899612061h3s",
       "__meta_cloudmap_service_name": "service-app",
