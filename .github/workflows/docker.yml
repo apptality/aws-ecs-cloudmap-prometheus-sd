@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - dev
+      - develop
 
 env:
   DOCKERHUB_USERNAME: apptality
@@ -40,18 +40,17 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Build and push (branch)
-        if: github.ref != 'refs/heads/master'
+      - name: Build and push (develop)
+        if: github.ref == 'refs/heads/develop'
         uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.branchName }}
-            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.majorMinor }}
-            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.majorMinorPatch }}
-            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.shortSha }}
-            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.fullSemVer }}
+            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.branchName }}-${{ steps.gitversion.outputs.shortSha }}
+            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.major }}.${{ steps.gitversion.outputs.minor }}-alpha
+            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.majorMinorPatch }}-alpha
 
       - name: Build and push (master)
         if: github.ref == 'refs/heads/master'
@@ -61,5 +60,5 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY_IMAGE }}:latest
-            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.majorMinor }}
+            ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.major }}.${{ steps.gitversion.outputs.minor }}
             ${{ env.REGISTRY_IMAGE }}:${{ steps.gitversion.outputs.majorMinorPatch }}
