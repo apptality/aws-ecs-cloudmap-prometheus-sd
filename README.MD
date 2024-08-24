@@ -90,7 +90,7 @@ Example run command:
     # Add new or modify existing labels in the response using token replacements,
     # to prevent the need of modifying your Grafana dashboards.
     # Please refer to the configuration options to learn more.
-    -e DiscoveryOptions__RelabelConfigurations="cluster_and_service={{ecs_cluster}}-{{ecs_service}}" \
+    -e DiscoveryOptions__RelabelConfigurations="cluster_and_service={{_sys_ecs_cluster}}-{{_sys_ecs_service}}" \
     # Instructs .NET application to listen on 9001 inside the container
     -e ASPNETCORE_URLS="http://*:9O01" \
     # ** DOCKER **
