@@ -261,6 +261,7 @@ For how to integrate AWS AMP (Prometheus) with your Grafana please refer to [Set
 There are definitely some discovery tools that are alternative to current application:
 
 * [Container Insights Prometheus metrics monitoring](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/ContainerInsights-Prometheus-Setup-autodiscovery-ecs.html) discovers your infrastructure using CloudWatch
+  * IMHO - How CloudWatch agent configuration is structured around discovery of resources is NOT idiomatic to AWS. AWS has a powerful, rich support of tags on pretty much any resource. It would be very natural & AWS'ish to use tagging filters for resource selection instead of complex Regex filters.
 * [aws-cloudmap-prometheus-sd](https://github.com/awslabs/aws-cloudmap-prometheus-sd) plugin by AWS
 * [prometheus-for-ecs](https://github.com/aws-samples/prometheus-for-ecs) plugin by AWS. Definitely dig into [deploy-prometheus](https://github.com/aws-samples/prometheus-for-ecs/tree/main/deploy-prometheus) and [deploy-adot](https://github.com/aws-samples/prometheus-for-ecs/tree/main/deploy-adot) folders of the repository to get a good understanding of how integrations are being set up.
 
