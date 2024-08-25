@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue)](/LICENSE)
 [![Docker Image Version](https://img.shields.io/docker/v/apptality/aws-ecs-cloudmap-prometheus-discovery?logo=docker&label=Latest%20Version)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery)
 [![Docker Image Size (tag)](https://img.shields.io/docker/image-size/apptality/aws-ecs-cloudmap-prometheus-discovery/latest?logo=docker&label=Image%20Size)](https://hub.docker.com/r/apptality/aws-ecs-cloudmap-prometheus-discovery/tags)
+[![Medium](https://img.shields.io/badge/Medium-Read_blog_post-black?logo=medium)](https://medium.com/@alxtsbk/scraping-prometheus-metrics-from-aws-ecs-9c8d9a1ca1bd)
 
 ## Overview
 
