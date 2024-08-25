@@ -16,6 +16,8 @@ Application leverages AWS API to dynamically discover:
 
 making it easier for Prometheus to monitor these services without hardcoding their addresses and ports, or using any kind of [file-based discovery](https://prometheus.io/docs/guides/file-sd/) (thus can be run as a standalone application: as it's own AWS ECS Service, for example).
 
+![AWS ECS & CloudMap Prometheus Discovery](/docs/diagram.svg)
+
 ## Features
 
 Below is a high level overview of what application is capable of. For the full list of supported configuration parameters and how to override these using [Docker Environment Variables](https://docs.docker.com/reference/cli/docker/container/run/#env) please refer to [appsettings.json](src/Apptality.CloudMapEcsPrometheusDiscovery/appsettings.json)

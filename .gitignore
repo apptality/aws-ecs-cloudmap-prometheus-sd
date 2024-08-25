@@ -409,3 +409,4 @@ FodyWeavers.xsd
 **/.env
 .docker/.env
 *.deb
+*.drawio.bkp
