@@ -65,6 +65,7 @@ resource "aws_ecs_task_definition" "task_definition" {
           value = var.ecs_cluster_name
         },
         {
+
           name  = "DiscoveryOptions__EcsServiceSelectorTags"
           value = "PROMETHEUS_TARGET=true"
         },
@@ -73,6 +74,13 @@ resource "aws_ecs_task_definition" "task_definition" {
           value = local.region
         }
       ]
+      healthCheck = {
+        command      = ["CMD-SHELL", "curl -f http://localhost:9001/health || exit 1"]
+        interval     = 30
+        timeout      = 5
+        retries      = 3
+        start_period = 60
+      }
       logConfiguration = {
         logDriver = "awslogs"
         options = {

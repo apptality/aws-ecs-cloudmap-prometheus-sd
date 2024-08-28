@@ -52,17 +52,17 @@ resource "aws_ecs_service" "service" {
 
   }
 
-#   Uncomment below to enable load balancer support for your application.
-#   You'll have to create variables & pass the list of target group ARNs to the module.
-#   dynamic "load_balancer" {
-#     for_each = var.target_group_arns
-#
-#     content {
-#       target_group_arn = load_balancer.value
-#       container_name   = local.ecs_service_name
-#       container_port   = 8080
-#     }
-#   }
+  #   Uncomment below to enable load balancer support for your application.
+  #   You'll have to create variables & pass the list of target group ARNs to the module.
+  #   dynamic "load_balancer" {
+  #     for_each = var.target_group_arns
+  #
+  #     content {
+  #       target_group_arn = load_balancer.value
+  #       container_name   = local.ecs_service_name
+  #       container_port   = 8080
+  #     }
+  #   }
 
   lifecycle {
     ignore_changes = [
@@ -171,11 +171,16 @@ resource "aws_ecs_task_definition" "task_definition" {
     # This duplicates the configuration in the CloudMap service resource ("aws_service_discovery_service.service_discovery")
     # just to show how to set the same configuration at the ECS Task level. These configuration are resolved in a specific order.
     # See appsettings.json for more details.
-    "METRICS_PORT"     = "8080"
-    "METRICS_PATH"     = "/metrics"
-    "METRICS_NAME"     = "/application"
-    "METRICS_PORT_ECS" = "9779"
-    "METRICS_PATH_ECS" = "/metrics"
-    "METRICS_NAME_ECS" = "ecs-exporter"
+    "METRICS_PORT"      = "8080"
+    "METRICS_PATH"      = "/metrics"
+    "METRICS_NAME"      = "/application"
+    "METRICS_PORT_ECS"  = "9779"
+    "METRICS_PATH_ECS"  = "/metrics"
+    "METRICS_NAME_ECS"  = "ecs-exporter"
+    # This needs to alight with the "DiscoveryOptions__EcsServiceSelectorTags"
+    # in the "aws-ecs-cloudmap-prometheus-discovery" application.
+    # This allows to discover and scrape only those applications,
+    # which you're interested in.
+    "PROMETHEUS_TARGET" = "true"
   })
 }
