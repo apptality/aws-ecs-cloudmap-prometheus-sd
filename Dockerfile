@@ -26,7 +26,7 @@ RUN dotnet publish -a $TARGETARCH \
     ./src/$PROJECT_NAME/$PROJECT_NAME.csproj
 
 # Build the runtime image
-FROM ${RUNTIME_IMAGE_BASE} as final
+FROM ${RUNTIME_IMAGE_BASE} AS final
 
 # Install curl for health checks
 RUN apk --no-cache add curl
@@ -42,8 +42,7 @@ WORKDIR /app
 # Only 2 files are needed to run the app: the binary and the appsettings.json
 COPY --from=build /app/out/CloudMapEcsPrometheusDiscovery* .
 COPY --from=build /app/out/appsettings.json .
-# Should be enough to prevent port conflicts
-EXPOSE 9001
+
 ENTRYPOINT ["./CloudMapEcsPrometheusDiscovery"]
 
 # Usage:

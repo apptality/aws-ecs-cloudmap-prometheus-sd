@@ -89,7 +89,9 @@ internal static class Startup
     /// </remarks>
     private static WebApplicationBuilder AddKestrelUrlsSupport(this WebApplicationBuilder builder)
     {
-        builder.WebHost.UseUrls();
+        var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://*:9001";
+        builder.WebHost.UseUrls(urls.Split(";"));
+
         return builder;
     }
 
@@ -126,8 +128,8 @@ internal static class Startup
     internal static WebApplicationBuilder AddInfrastructure(this WebApplicationBuilder builder)
     {
         return builder
-            .AddKestrelUrlsSupport()
             .AddConfiguration()
+            .AddKestrelUrlsSupport()
             .AddLogging()
             .AddHealthChecks()
             .AddCaching()
