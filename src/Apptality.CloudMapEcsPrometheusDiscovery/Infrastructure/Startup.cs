@@ -91,6 +91,7 @@ internal static class Startup
     {
         var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://*:9001";
         builder.WebHost.UseUrls(urls.Split(";"));
+        
         return builder;
     }
 
